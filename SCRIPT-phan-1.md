@@ -154,11 +154,11 @@ Loại thứ ba: **wide-column**, tiêu biểu là Cassandra. Cách nghĩ: dữ 
 
 _[→]_ Nên câu "20 sản phẩm user 42 xem gần nhất" chỉ cần đọc đúng một partition, dữ liệu đã nằm theo thứ tự — rất nhanh.
 
-Điểm mạnh lớn nhất là **ghi cực nhanh**: nó ghi vào RAM và commit log trước, sau đó mới dồn xuống đĩa thành các file bất biến — cấu trúc này gọi là LSM-tree. Cassandra không có master, mọi node ngang hàng, scale gần như tuyến tính. Và mình chọn được mức nhất quán cho từng query: `ONE` là chỉ cần một máy trả lời, `QUORUM` là đa số, `ALL` là tất cả — càng nhiều máy thì càng chắc có dữ liệu mới nhất, nhưng càng chậm.
+Điểm mạnh lớn nhất là **ghi cực nhanh**: nó ghi vào RAM và commit log trước, sau đó mới dồn xuống đĩa thành các file bất biến — cấu trúc này gọi là LSM-tree.
 
-_[→]_ Điểm yếu: query **bắt buộc** phải theo partition key, không JOIN, nên thường mỗi query thiết kế một bảng riêng. Và lưu ý đừng nhầm với **columnar database** như ClickHouse — loại đó lưu theo cột để phân tích, là một chuyện khác.
+_[→]_ Điểm yếu: query **bắt buộc** phải theo partition key, không JOIN, nên thường mỗi query thiết kế một bảng riêng.
 
-_(~2,5 phút)_
+_(~2 phút)_
 
 ## Slide 18 · 3.4 · Graph
 

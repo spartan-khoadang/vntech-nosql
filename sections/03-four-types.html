@@ -171,19 +171,16 @@ WHERE user_id = 42 LIMIT 20;   <span class="c">-- đọc đúng 1 partition</spa
     </div>
     <ul class="points tight">
       <li><span class="chip ok">mạnh</span> <b>Ghi cực nhanh</b>: ghi vào RAM + log, sau đó mới dồn xuống đĩa (LSM-tree).</li>
-      <li><span class="chip ok">mạnh</span> Scale tuyến tính tới hàng trăm node; Cassandra không có master.</li>
-      <li data-step="1"><span class="chip ok">mạnh</span> Chọn mức nhất quán theo từng query: <code>ONE</code>, <code>QUORUM</code>, <code>ALL</code>.</li>
       <li data-step="2"><span class="chip risk">yếu</span> Query <b>bắt buộc</b> đi theo partition key; không JOIN; thiết kế mỗi query một bảng.</li>
-      <li data-step="2"><span class="chip risk">đừng nhầm</span> Khác <b>columnar DB</b> (ClickHouse, BigQuery) dùng cho phân tích.</li>
     </ul>
   </div>
   <div class="foot"><span class="num"></span><span>wide-column</span></div>
   <aside class="notes">
     <p>Loại thứ ba: <b>wide-column</b>, tiêu biểu là Cassandra. Cách nghĩ: dữ liệu được chia theo <b>partition key</b> — ở đây là <code>user_id</code>. Bên trong mỗi partition, các hàng được <b>sắp xếp sẵn</b> theo <b>clustering key</b> — ở đây là thời gian xem, mới nhất ở trên.</p>
     <p><i>[→]</i> Nên câu "20 sản phẩm user 42 xem gần nhất" chỉ cần đọc đúng một partition, dữ liệu đã nằm theo thứ tự — rất nhanh.</p>
-    <p>Điểm mạnh lớn nhất là <b>ghi cực nhanh</b>: nó ghi vào RAM và commit log trước, sau đó mới dồn xuống đĩa thành các file bất biến — cấu trúc này gọi là LSM-tree. Cassandra không có master, mọi node ngang hàng, scale gần như tuyến tính. Và mình chọn được mức nhất quán cho từng query: <code>ONE</code> là chỉ cần một máy trả lời, <code>QUORUM</code> là đa số, <code>ALL</code> là tất cả — càng nhiều máy thì càng chắc có dữ liệu mới nhất, nhưng càng chậm.</p>
-    <p><i>[→]</i> Điểm yếu: query <b>bắt buộc</b> phải theo partition key, không JOIN, nên thường mỗi query thiết kế một bảng riêng. Và lưu ý đừng nhầm với <b>columnar database</b> như ClickHouse — loại đó lưu theo cột để phân tích, là một chuyện khác.</p>
-    <p><i>(~2,5 phút)</i></p>
+    <p>Điểm mạnh lớn nhất là <b>ghi cực nhanh</b>: nó ghi vào RAM và commit log trước, sau đó mới dồn xuống đĩa thành các file bất biến — cấu trúc này gọi là LSM-tree.</p>
+    <p><i>[→]</i> Điểm yếu: query <b>bắt buộc</b> phải theo partition key, không JOIN, nên thường mỗi query thiết kế một bảng riêng.</p>
+    <p><i>(~2 phút)</i></p>
   </aside>
 </section>
 
