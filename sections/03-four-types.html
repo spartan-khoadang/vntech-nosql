@@ -56,6 +56,7 @@ INCR rate_limit:ip:1.2.3.4              <span class="c"># tăng nguyên tử</sp
     <p>Ví dụ với Redis: <code>SET</code> một session kèm <code>EX 3600</code> nghĩa là một tiếng sau nó tự biến mất. <code>INCR</code> tăng một bộ đếm một cách nguyên tử — dùng cho rate limiting.</p>
     <p>Điểm mạnh: đọc ghi theo key là O(1), nhiều hệ chạy trong RAM nên dưới một mili-giây. Phân tán rất dễ vì chỉ cần hash key là biết node. <i>[→]</i> Có TTL cho dữ liệu tạm.</p>
     <p><i>[→]</i> Điểm yếu: <b>không hỏi được theo nội dung</b>. Muốn "tìm mọi session của user 42" thì phải tự tạo thêm key làm index.</p>
+    <p>Ví dụ shop online: giỏ hàng lưu theo key <code>cart:user:42</code> — mở giỏ của user 42 thì cực nhanh. Nhưng hỏi "những giỏ nào đang có sản phẩm A1?" (để báo A1 sắp hết hàng) thì Redis chịu, phải mở từng giỏ ra xem. Muốn trả lời nhanh, app phải tự ghi thêm key <code>product:A1:carts</code> → [42, 57, …], và tự xoá khỏi đó khi user bỏ A1 ra khỏi giỏ.</p>
     <p><i>(~2 phút)</i></p>
   </aside>
 </section>
@@ -85,7 +86,7 @@ db.products.find({
       <li><span class="chip ok">mạnh</span> Schema linh hoạt, khớp tự nhiên với object trong code.</li>
       <li><span class="chip ok">mạnh</span> Dữ liệu liên quan được <b>lồng</b> (embed) vào nhau → đọc một lần là đủ.</li>
       <li data-step="1"><span class="chip ok">mạnh</span> Có index phụ, aggregation, query theo trường lồng nhau.</li>
-      <li data-step="2"><span class="chip risk">yếu</span> Quan hệ nhiều–nhiều phức tạp khó mô hình; dữ liệu nhân bản phải tự đồng bộ; document không được phình vô hạn (MongoDB giới hạn 16 MB).</li>
+      <li data-step="2"><span class="chip risk">yếu</span> Quan hệ nhiều–nhiều phức tạp khó mô hình; document không được phình vô hạn (MongoDB giới hạn 16 MB).</li>
     </ul>
   </div>
   <div class="foot"><span class="num"></span><span>document</span></div>
@@ -93,8 +94,51 @@ db.products.find({
     <p>Loại thứ hai: <b>document</b>. Về bản chất nó giống key-value — mỗi document có một <code>_id</code> — nhưng khác ở chỗ database <b>hiểu cấu trúc</b> bên trong. Document được nhóm vào <b>collection</b>, giống bảng nhưng không có schema cố định.</p>
     <p>Đây là một laptop: có <code>specs</code> lồng bên trong, có mảng <code>tags</code>, có cả <code>reviews</code>. <i>[→]</i> Và mình query được thẳng vào trường lồng nhau: laptop có RAM từ 16GB, giá dưới 30 triệu, sắp xếp theo giá. Cũng đánh index được trên các trường đó.</p>
     <p>Điểm mạnh: linh hoạt, thân thiện với lập trình viên, đọc một lần là có đủ dữ liệu.</p>
-    <p><i>[→]</i> Điểm yếu: quan hệ nhiều–nhiều khó mô hình; khi nhân bản dữ liệu thì phải tự đồng bộ; và một document không được phình vô hạn — MongoDB giới hạn 16 MB.</p>
+    <p><i>[→]</i> Điểm yếu: quan hệ nhiều–nhiều khó mô hình — slide sau có ví dụ; và một document không được phình vô hạn — MongoDB giới hạn 16 MB.</p>
     <p><i>(~2 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="document-many-to-many">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-doc"/></svg>3.2 · Document · ví dụ</div>
+  <h2>Đơn hàng ↔ sản phẩm là quan hệ <b style="white-space: nowrap">nhiều–nhiều</b>: nhúng vào đâu cũng có giá</h2>
+  <div class="trio">
+    <div class="card">
+      <div class="k">Cách 1 · nhúng sản phẩm vào đơn</div>
+<pre class="code sm">{ "_id": "order_9001",
+  "items": [ <span class="hl">{ "sku": "A1",
+    "name": "Áo thun",
+    "price": 199000 }</span> ] }</pre>
+      <p><span class="chip ok">tốt</span> Xem 1 đơn: đọc 1 document.</p>
+      <p><span class="chip risk">giá</span> Đổi tên A1 → sửa hàng nghìn đơn đang chứa bản sao.</p>
+    </div>
+    <div class="card" data-step="1">
+      <div class="k">Cách 2 · nhúng đơn vào sản phẩm</div>
+<pre class="code sm">{ "_id": "A1",
+  "name": "Áo thun",
+  <span class="hl">"orders": [ "order_9001",
+    "order_9002", … ]</span> }</pre>
+      <p><span class="chip ok">tốt</span> Biết ngay A1 nằm trong đơn nào.</p>
+      <p><span class="chip risk">giá</span> Bán chạy → mảng phình mãi, chạm giới hạn 16 MB.</p>
+    </div>
+    <div class="card" data-step="2">
+      <div class="k">Cách 3 · chỉ lưu id, tra sau</div>
+<pre class="code sm">{ "_id": "order_9001",
+  "items": [ <span class="hl">{ "sku": "A1",
+    "qty": 2 }</span> ] }
+<span class="c">// + $lookup sang products</span></pre>
+      <p><span class="chip ok">tốt</span> Không lặp dữ liệu, không phình.</p>
+      <p><span class="chip risk">giá</span> Lại phải JOIN — thứ document muốn tránh.</p>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>document · nhiều–nhiều</span></div>
+  <aside class="notes">
+    <p>Ví dụ cho điểm yếu vừa rồi. Một đơn hàng có nhiều sản phẩm, một sản phẩm nằm trong nhiều đơn — quan hệ <b>nhiều–nhiều</b>. SQL chỉ cần thêm bảng nối <code>order_items</code> rồi JOIN, hỏi chiều nào cũng được. Document thì phải chọn: nhúng vào đâu?</p>
+    <p>Cách 1: nhúng sản phẩm vào đơn. Xem một đơn rất nhanh, nhưng đổi tên áo A1 thì phải sửa hàng nghìn đơn đang giữ bản sao.</p>
+    <p><i>[→]</i> Cách 2: nhúng ngược, danh sách đơn vào sản phẩm. Sản phẩm bán chạy có hàng triệu đơn, mảng phình tới giới hạn 16 MB.</p>
+    <p><i>[→]</i> Cách 3: chỉ lưu id rồi tra sau bằng <code>$lookup</code>. Gọn, nhưng đó lại chính là JOIN.</p>
+    <p>Quan hệ 1–nhiều thì document làm rất tốt — cứ nhúng con vào cha. Nhiều–nhiều thì không có "cha" rõ ràng, nên phải chọn theo câu query hay chạy nhất. Thực tế hay dùng cách 1 cho đơn hàng: giá và tên lúc mua vốn nên được giữ nguyên.</p>
+    <p><i>(~1,5 phút)</i></p>
   </aside>
 </section>
 

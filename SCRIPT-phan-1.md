@@ -4,7 +4,7 @@
 > Khi trình chiếu: nhấn **N** để hiện script ngay trên slide, **→ / Space** để qua bước tiếp theo, **O** xem tổng quan, **T** đổi theme, **F** toàn màn hình.
 > `[→]` trong script = nhấn phím mũi tên để hiện ý tiếp theo trên cùng slide.
 
-**Tổng thời lượng ước tính:** khoảng 40 phút (chưa tính hỏi đáp), 29 slide.
+**Tổng thời lượng ước tính:** khoảng 42 phút (chưa tính hỏi đáp), 30 slide.
 
 ## Slide 1 · Phần 1 · Nền tảng
 
@@ -41,8 +41,6 @@ _(~1,5 phút)_
 Định nghĩa: NoSQL thường được hiểu là **"Not only SQL"** — các database **không lấy bảng quan hệ** (hàng, cột, khóa ngoại) làm cách lưu chính.
 
 Bên trái là cách SQL làm: tách ba bảng, khi đọc thì JOIN lại. _[→]_ Bên phải là cách một document database làm: mỗi sản phẩm là một JSON, laptop có `specs`, áo có `size`, `color`. Đọc một lần là đủ, không JOIN.
-
-_[→]_ Lưu ý chữ "Not only": nhiều NoSQL vẫn có ngôn ngữ giống SQL. Và NoSQL không phải một sản phẩm — nó là một **họ** gồm rất nhiều database với triết lý khác nhau, như mình sẽ thấy ở phần 3.
 
 _(~1,5 phút)_
 
@@ -120,6 +118,8 @@ Ví dụ với Redis: `SET` một session kèm `EX 3600` nghĩa là một tiến
 
 _[→]_ Điểm yếu: **không hỏi được theo nội dung**. Muốn "tìm mọi session của user 42" thì phải tự tạo thêm key làm index.
 
+Ví dụ shop online: giỏ hàng lưu theo key `cart:user:42` — mở giỏ của user 42 thì cực nhanh. Nhưng hỏi "những giỏ nào đang có sản phẩm A1?" (để báo A1 sắp hết hàng) thì Redis chịu, phải mở từng giỏ ra xem. Muốn trả lời nhanh, app phải tự ghi thêm key `product:A1:carts` → [42, 57, …], và tự xoá khỏi đó khi user bỏ A1 ra khỏi giỏ.
+
 _(~2 phút)_
 
 ## Slide 15 · 3.2 · Document
@@ -130,11 +130,25 @@ Loại thứ hai: **document**. Về bản chất nó giống key-value — mỗ
 
 Điểm mạnh: linh hoạt, thân thiện với lập trình viên, đọc một lần là có đủ dữ liệu.
 
-_[→]_ Điểm yếu: quan hệ nhiều–nhiều khó mô hình; khi nhân bản dữ liệu thì phải tự đồng bộ; và một document không được phình vô hạn — MongoDB giới hạn 16 MB.
+_[→]_ Điểm yếu: quan hệ nhiều–nhiều khó mô hình — slide sau có ví dụ; và một document không được phình vô hạn — MongoDB giới hạn 16 MB.
 
 _(~2 phút)_
 
-## Slide 16 · 3.3 · Wide-column
+## Slide 16 · 3.2 · Document · ví dụ
+
+Ví dụ cho điểm yếu vừa rồi. Một đơn hàng có nhiều sản phẩm, một sản phẩm nằm trong nhiều đơn — quan hệ **nhiều–nhiều**. SQL chỉ cần thêm bảng nối `order_items` rồi JOIN, hỏi chiều nào cũng được. Document thì phải chọn: nhúng vào đâu?
+
+Cách 1: nhúng sản phẩm vào đơn. Xem một đơn rất nhanh, nhưng đổi tên áo A1 thì phải sửa hàng nghìn đơn đang giữ bản sao.
+
+_[→]_ Cách 2: nhúng ngược, danh sách đơn vào sản phẩm. Sản phẩm bán chạy có hàng triệu đơn, mảng phình tới giới hạn 16 MB.
+
+_[→]_ Cách 3: chỉ lưu id rồi tra sau bằng `$lookup`. Gọn, nhưng đó lại chính là JOIN.
+
+Quan hệ 1–nhiều thì document làm rất tốt — cứ nhúng con vào cha. Nhiều–nhiều thì không có "cha" rõ ràng, nên phải chọn theo câu query hay chạy nhất. Thực tế hay dùng cách 1 cho đơn hàng: giá và tên lúc mua vốn nên được giữ nguyên.
+
+_(~1,5 phút)_
+
+## Slide 17 · 3.3 · Wide-column
 
 Loại thứ ba: **wide-column**, tiêu biểu là Cassandra. Cách nghĩ: dữ liệu được chia theo **partition key** — ở đây là `user_id`. Bên trong mỗi partition, các hàng được **sắp xếp sẵn** theo **clustering key** — ở đây là thời gian xem, mới nhất ở trên.
 
@@ -146,7 +160,7 @@ _[→]_ Điểm yếu: query **bắt buộc** phải theo partition key, không 
 
 _(~2,5 phút)_
 
-## Slide 17 · 3.4 · Graph
+## Slide 18 · 3.4 · Graph
 
 Loại cuối: **graph**. Dữ liệu là **node** — An, Bình, Chi, sản phẩm — và **cạnh** có tên — FRIEND, BOUGHT. Điểm khác biệt: quan hệ được **lưu thẳng**, mỗi node trỏ trực tiếp tới hàng xóm, nên duyệt không phụ thuộc tổng kích thước dữ liệu.
 
@@ -158,7 +172,7 @@ _[→]_ Điểm yếu: đồ thị khó cắt ra nhiều máy, và không hợp 
 
 _(~2 phút)_
 
-## Slide 18 · So sánh 4 loại
+## Slide 19 · So sánh 4 loại
 
 Gom lại thành một bảng. Không có loại nào thắng ở mọi cột: key-value scale dễ nhất nhưng không query được theo nội dung; graph mạnh nhất về quan hệ nhưng khó scale.
 
@@ -166,7 +180,7 @@ Dòng cuối là hình ảnh để dễ nhớ: key-value là **tủ đồ có s�
 
 _(~1,5 phút)_
 
-## Slide 19 · Bốn loại trong một hệ thống
+## Slide 20 · Bốn loại trong một hệ thống
 
 Trong thực tế, một hệ thống không chỉ dùng một loại. Đây là một shop online: **Redis** giữ session và giỏ hàng, **MongoDB** giữ catalog sản phẩm, **Neo4j** tính gợi ý, **Cassandra** ghi lịch sử xem và log. Phần thanh toán thường vẫn để ở SQL vì cần ACID.
 
@@ -174,7 +188,7 @@ Cách làm này gọi là **polyglot persistence**. Cái giá là phải vận h
 
 _(~1,5 phút)_
 
-## Slide 20 · Ngoài bốn loại chính
+## Slide 21 · Ngoài bốn loại chính
 
 Ngoài bốn loại chính, có vài nhánh chuyên biệt mọi người sẽ hay gặp: **time-series** cho metrics và dữ liệu cảm biến; **search engine** như Elasticsearch cho tìm kiếm full-text; **vector database** — đang rất hot nhờ AI — để tìm theo ý nghĩa bằng embedding; và **multi-model** hỗ trợ nhiều mô hình trong một hệ.
 
@@ -182,11 +196,11 @@ Hôm nay mình chỉ điểm danh; trọng tâm vẫn là bốn loại chính.
 
 _(~1 phút)_
 
-## Slide 21 · Phần 04 — Khái niệm phân tán
+## Slide 22 · Phần 04 — Khái niệm phân tán
 
 Phần bốn: các khái niệm phân tán. Vì NoSQL chạy trên nhiều máy, có vài khái niệm mà ai làm NoSQL cũng phải biết: ACID và BASE, định lý CAP, và quorum. Mình sẽ đi nhanh và trực quan.
 
-## Slide 22 · ACID vs BASE
+## Slide 23 · ACID vs BASE
 
 **ACID** là lời hứa của SQL truyền thống: Atomicity — làm hết hoặc không làm gì; Consistency — luôn thỏa ràng buộc; Isolation — các giao dịch song song không giẫm chân nhau; Durability — đã commit thì không mất. Ví dụ kinh điển: chuyển tiền, không được phép trừ bên này mà chưa cộng bên kia. Để giữ lời hứa đó, hệ thống **thà bắt chờ hoặc báo lỗi** còn hơn trả kết quả sai.
 
@@ -202,7 +216,7 @@ Ba chữ này thật ra là **một cơ chế nhìn từ ba góc** — slide sau
 
 _(~2,5 phút)_
 
-## Slide 23 · BASE qua một ví dụ
+## Slide 24 · BASE qua một ví dụ
 
 Một bài viết đang có **100 like**. Dữ liệu được sao ra **3 máy** A, B, C — lúc đầu cả ba đều ghi 100. Giờ có hai người bấm like, request ghi đi vào máy A.
 
@@ -220,7 +234,7 @@ Vậy có cách nào để hệ BASE vẫn đọc được bản mới nhất kh
 
 _(~2,5 phút)_
 
-## Slide 24 · Định lý CAP
+## Slide 25 · Định lý CAP
 
 **Định lý CAP** nói rằng trong hệ phân tán, khi mạng giữa các máy bị đứt — gọi là partition — hệ thống chỉ đảm bảo được một trong hai: **C**, mọi lần đọc đều thấy bản mới nhất; hoặc **A**, mọi request đều được trả lời.
 
@@ -232,7 +246,7 @@ Nghe vẫn hơi trừu tượng, nên mình đi qua một ví dụ cụ thể.
 
 _(~2 phút)_
 
-## Slide 25 · CAP qua một ví dụ
+## Slide 26 · CAP qua một ví dụ
 
 Một ví dụ cụ thể. Shop online còn đúng **1 chiếc áo**. Dữ liệu tồn kho được lưu trên 3 máy: 2 máy ở Hà Nội, 1 máy ở TP.HCM. Bình thường, ba máy liên tục báo cho nhau mỗi khi có thay đổi.
 
@@ -250,7 +264,7 @@ _[→]_ Nhưng nếu đổi tồn kho thành **số like** thì sao? Lệch mộ
 
 _(~2,5 phút)_
 
-## Slide 26 · Quorum
+## Slide 27 · Quorum
 
 Vậy các hệ AP như Cassandra làm sao vẫn đọc đúng? Câu trả lời là **quorum**.
 
@@ -262,11 +276,11 @@ Tại sao luôn đúng? Vì **2 + 2 > 3**: hai máy đọc và hai máy ghi tron
 
 _(~2,5 phút)_
 
-## Slide 27 · Phần 05 — Tổng kết
+## Slide 28 · Phần 05 — Tổng kết
 
 Phần cuối: tổng kết. Mình sẽ gói mọi thứ thành một cây quyết định và chốt năm điều nên nhớ.
 
-## Slide 28 · Chọn database
+## Slide 29 · Chọn database
 
 Đây là một cây quyết định đơn giản. Câu hỏi đầu tiên: có cần **ACID trên nhiều bảng** không — tiền, tồn kho? Có thì dùng SQL. Không thì hỏi tiếp: **quan hệ có phải trọng tâm** không? Có thì graph. Tiếp: có phải **chỉ tra theo key**? Có thì key-value. Tiếp: **ghi cực lớn**, time-series, log? Có thì wide-column. Nếu tất cả đều không, document là lựa chọn mặc định linh hoạt.
 
@@ -274,7 +288,7 @@ Nhớ là đây chỉ là heuristic. Phần 2 mình sẽ thấy các hệ thốn
 
 _(~1,5 phút)_
 
-## Slide 29 · Năm điều nên nhớ
+## Slide 30 · Năm điều nên nhớ
 
 Năm điều nên nhớ. **Một**, NoSQL là "Not only SQL" — một họ database, không phải một sản phẩm.
 
