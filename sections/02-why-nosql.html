@@ -1,0 +1,157 @@
+<!-- ============ SECTION 2 — WHY NOSQL ============ -->
+<section class="slide divider" data-section="divider-02">
+  <div class="divider-num">02</div>
+  <div class="section-tag"><i></i>PHẦN 2</div>
+  <h2>Why NoSQL?</h2>
+  <p class="lead">SQL vẫn rất tốt. NoSQL sinh ra để xử lý vài giới hạn cụ thể của nó: khó mở rộng ngang và schema cứng.</p>
+  <div class="foot"><span class="num"></span><span>02 · why nosql</span></div>
+  <aside class="notes">
+    <p>Phần hai, cũng là phần quan trọng nhất: <b>đã có SQL rồi, sao còn cần NoSQL?</b> Mình muốn nói rõ ngay từ đầu: SQL không hề lỗi thời. NoSQL ra đời để giải quyết vài giới hạn <b>rất cụ thể</b>. Mình sẽ đi qua hai vấn đề chính.</p>
+  </aside>
+</section>
+
+<section class="slide dia" data-section="scaling">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-scale"/></svg>Vấn đề 1 · Mở rộng</div>
+  <h2>SQL truyền thống mạnh lên bằng cách <b>nâng một máy</b>. NoSQL mạnh lên bằng cách <b>thêm máy</b>.</h2>
+  <div class="body" style="min-height:0;">
+    <div class="diagram-embed fit" style="aspect-ratio: 1.67;">
+      <iframe src="diagrams/scale-up-vs-scale-out.html?embed=1" loading="lazy" title="Scale up vs scale out"></iframe>
+    </div>
+    <div class="diagram-caption">
+      <span>Scale up: có trần phần cứng và một điểm lỗi duy nhất. Scale out: chia dữ liệu theo shard key, mỗi phần có bản sao.</span>
+      <a href="diagrams/scale-up-vs-scale-out.html" target="_blank" rel="noopener">Mở toàn màn hình ↗</a>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>scale up vs scale out</span></div>
+  <aside class="notes">
+    <p>Vấn đề đầu tiên là <b>mở rộng</b>. Phía trên là cách truyền thống: <b>scale up</b> — mọi request vào một server database. Chậm thì mua thêm CPU, RAM, SSD. Cách này đơn giản, giữ ACID dễ, nhưng giá tăng rất nhanh, có trần phần cứng, và nếu máy đó chết thì cả hệ thống chết.</p>
+    <p>Phía dưới là <b>scale out</b>: dữ liệu được chia thành nhiều phần gọi là <b>shard</b>. Query router nhìn vào <b>shard key</b> — ví dụ key bắt đầu từ A đến H — để biết dữ liệu nằm ở máy nào. Mỗi shard lại có <b>replica</b> để nếu một máy chết thì vẫn còn bản sao. Tải tăng gấp đôi thì thêm máy.</p>
+    <p><i>(~2 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="why-sql-hard">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-split"/></svg>Vì sao SQL khó scale ngang?</div>
+  <h2>Khi dữ liệu nằm trên nhiều máy, <b>JOIN</b> và <b>transaction</b> phải chạy qua mạng</h2>
+  <div class="split">
+    <div class="chart meter">
+      <svg viewBox="0 0 640 290" role="img" aria-label="JOIN giữa hai shard phải đi qua mạng">
+        <defs><marker id="arr-join" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" class="sv-ink"/></marker></defs>
+        <rect x="230" y="10" width="180" height="56" rx="10" class="sv-box-hot"/>
+        <text x="320" y="34" text-anchor="middle" class="sv-lbl">Query</text>
+        <text x="320" y="53" text-anchor="middle" class="sv-hot">orders JOIN users</text>
+
+        <rect x="20" y="170" width="200" height="90" rx="10" class="sv-box"/>
+        <text x="120" y="200" text-anchor="middle" class="sv-lbl">Máy 1</text>
+        <text x="120" y="222" text-anchor="middle" class="sv-lbl-sm">orders của user 1–5M</text>
+        <rect x="420" y="170" width="200" height="90" rx="10" class="sv-box"/>
+        <text x="520" y="200" text-anchor="middle" class="sv-lbl">Máy 2</text>
+        <text x="520" y="222" text-anchor="middle" class="sv-lbl-sm">users 1–5M</text>
+        <path d="M280 66 L150 166" class="sv-line" marker-end="url(#arr-join)"/>
+        <path d="M360 66 L490 166" class="sv-line" marker-end="url(#arr-join)"/>
+        <g data-step="1">
+          <path d="M224 215 H416" class="sv-limit" />
+          <text x="320" y="205" text-anchor="middle" class="sv-risk">gửi dữ liệu qua mạng</text>
+          <text x="320" y="240" text-anchor="middle" class="sv-risk">chậm · khóa · 2-phase commit</text>
+        </g>
+        <g data-step="2">
+          <text x="320" y="285" text-anchor="middle" class="sv-ok">NoSQL: gom order + user cần đọc vào cùng 1 chỗ</text>
+        </g>
+      </svg>
+    </div>
+    <ul class="points tight">
+      <li>Trên một máy, JOIN và transaction rất rẻ. Trên nhiều máy, chúng phải <b>phối hợp qua mạng</b>.</li>
+      <li data-step="1">Transaction trải nhiều máy cần <b>two-phase commit</b>: chậm, và một máy chậm làm cả giao dịch chờ.</li>
+      <li data-step="2"><span class="chip hot">cách NoSQL né</span> Đặt dữ liệu hay được đọc cùng nhau vào <b>một key / một document / một partition</b>, để mỗi request chỉ chạm một máy.</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>vì sao sql khó scale ngang</span></div>
+  <aside class="notes">
+    <p>Câu hỏi tự nhiên: sao không chia SQL ra nhiều máy luôn? Được, nhưng khó. Trên một máy, JOIN và transaction rất rẻ. Khi bảng <code>orders</code> ở máy 1 và <code>users</code> ở máy 2, một JOIN phải <b>kéo dữ liệu qua mạng</b>.</p>
+    <p><i>[→]</i> Transaction cũng vậy: muốn đảm bảo "hoặc cả hai máy cùng ghi, hoặc không máy nào ghi" thì cần two-phase commit — chậm, và một máy chậm làm cả giao dịch chờ.</p>
+    <p><i>[→]</i> NoSQL né vấn đề này bằng cách thiết kế để <b>dữ liệu hay đọc cùng nhau nằm cùng một chỗ</b> — cùng một key, một document hay một partition. Mỗi request chỉ chạm một máy, nên thêm máy là thêm sức chứa gần như tuyến tính.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="schema-mismatch">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-doc"/></svg>Vấn đề 2 · Schema cứng &amp; lệch mô hình</div>
+  <h2>Code nghĩ bằng <b>object lồng nhau</b>, SQL bắt mình cắt chúng ra thành <b>bảng phẳng</b></h2>
+  <div class="two">
+    <div class="stack">
+      <div class="code-label">Trong code: một Order là một object</div>
+<pre class="code sm">order = {
+  id: 9001,
+  customer: { name: "An", phone: "09…" },
+  items: [
+    { sku: "A1", qty: 2, price: 199000 },
+    { sku: "B7", qty: 1, price: 25990000 }
+  ],
+  shipping: { city: "HCM", street: "…" }
+}</pre>
+    </div>
+    <div class="stack" data-step="1">
+      <div class="code-label">Trong SQL: 4 bảng, cần ORM để ghép lại</div>
+<pre class="code sm">orders(id, customer_id, shipping_id)
+customers(id, name, phone)
+order_items(order_id, sku, qty, price)
+addresses(id, city, street)
+
+<span class="c">-- thêm 1 trường mới cho đơn hàng:</span>
+<span class="hl">ALTER TABLE orders ADD COLUMN gift_note TEXT;</span>
+<span class="c">-- trên bảng 500 triệu dòng…</span></pre>
+    </div>
+  </div>
+  <ul class="points tight" data-step="2">
+    <li><span class="chip hot">impedance mismatch</span> Độ lệch giữa object trong code và bảng trong DB. Document DB lưu thẳng object dưới dạng JSON, và thêm trường mới không cần migration lớn.</li>
+  </ul>
+  <div class="foot"><span class="num"></span><span>schema &amp; impedance mismatch</span></div>
+  <aside class="notes">
+    <p>Vấn đề thứ hai là <b>schema cứng</b>. Trong code, một đơn hàng là một object: có khách hàng, danh sách item, địa chỉ giao hàng — lồng vào nhau rất tự nhiên.</p>
+    <p><i>[→]</i> Trong SQL, mình phải cắt nó ra bốn bảng, rồi dùng ORM để ghép lại mỗi lần đọc. Và khi sản phẩm cần thêm một trường như "lời nhắn quà tặng", phải <code>ALTER TABLE</code> trên bảng có thể hàng trăm triệu dòng — cần lên kế hoạch migration cẩn thận.</p>
+    <p><i>[→]</i> Độ lệch này có tên là <b>impedance mismatch</b>. Document database lưu thẳng object dưới dạng JSON, nên khớp với code hơn, và thêm trường mới không cần migration lớn.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="sql-vs-nosql">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-scale"/></svg>SQL vs NoSQL</div>
+  <h2>Hai cách tiếp cận, mỗi bên mạnh ở chỗ bên kia phải đánh đổi</h2>
+  <table class="tbl dense">
+    <thead><tr><th></th><th>SQL (RDBMS)</th><th>NoSQL</th></tr></thead>
+    <tbody>
+      <tr><td class="name">Mô hình</td><td>Bảng, hàng, cột, khóa ngoại</td><td>Key-value, document, wide-column, graph</td></tr>
+      <tr><td class="name">Schema</td><td>Cố định, khai báo trước</td><td>Linh hoạt, nằm trong code</td></tr>
+      <tr><td class="name">Mở rộng</td><td>Chủ yếu theo chiều dọc</td><td>Chủ yếu theo chiều ngang</td></tr>
+      <tr><td class="name">Giao dịch</td><td>ACID đầy đủ, nhiều bảng</td><td>Thường ACID trong 1 bản ghi / partition</td></tr>
+      <tr><td class="name">Nhất quán</td><td>Mạnh (strong)</td><td>Thường chọn được: mạnh hoặc "nhất quán dần"</td></tr>
+      <tr><td class="name">Truy vấn</td><td>SQL chuẩn, JOIN mạnh, ad-hoc tốt</td><td>Tối ưu cho các query biết trước</td></tr>
+      <tr><td class="name">Thiết kế</td><td>Chuẩn hóa, tránh trùng lặp</td><td>Phi chuẩn hóa, theo query</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span class="num"></span><span>so sánh</span></div>
+  <aside class="notes">
+    <p>Tóm lại thành một bảng. Mình chỉ nhấn mạnh ba dòng.</p>
+    <p><b>Mở rộng</b>: SQL chủ yếu theo chiều dọc, NoSQL theo chiều ngang. <b>Giao dịch</b>: SQL có ACID đầy đủ trên nhiều bảng; NoSQL thường chỉ đảm bảo trong một bản ghi hoặc một partition. <b>Truy vấn</b>: SQL rất mạnh với câu hỏi bất chợt — ad-hoc — nhờ JOIN; NoSQL nhanh với các query đã biết trước lúc thiết kế, còn câu hỏi bất chợt thì thường chậm hoặc không làm được.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="tradeoff">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-flag"/></svg>Điểm mấu chốt</div>
+  <div class="split even">
+    <p class="big-quote">NoSQL không <em>tốt hơn</em> SQL. Nó <em>đánh đổi</em>.</p>
+    <ul class="points">
+      <li><span class="chip risk">bỏ bớt</span> JOIN, transaction nhiều bảng, query ad-hoc, đôi khi cả nhất quán mạnh.</li>
+      <li data-step="1"><span class="chip ok">đổi lấy</span> Scale ngang, latency thấp, luôn sẵn sàng, schema linh hoạt.</li>
+      <li data-step="2"><span class="chip hot">hệ quả</span> Câu hỏi đúng không phải "SQL hay NoSQL?" mà là <b>"dữ liệu này được đọc và ghi như thế nào?"</b></li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>takeaway phần 2</span></div>
+  <aside class="notes">
+    <p>Nếu chỉ nhớ một câu của phần này thì đó là: <b>NoSQL không tốt hơn SQL — nó đánh đổi.</b></p>
+    <p>Nó bỏ bớt JOIN, transaction nhiều bảng, query ad-hoc, đôi khi cả nhất quán mạnh. <i>[→]</i> Để đổi lấy scale ngang, latency thấp, sẵn sàng cao và schema linh hoạt.</p>
+    <p><i>[→]</i> Vì vậy câu hỏi đúng không phải "SQL hay NoSQL", mà là "dữ liệu này sẽ được đọc và ghi như thế nào". Và câu trả lời cho câu hỏi đó sẽ dẫn mình tới một trong bốn loại NoSQL ở phần tiếp theo.</p>
+    <p><i>(~1 phút)</i></p>
+  </aside>
+</section>

@@ -1,0 +1,110 @@
+<!-- ============ SECTION 1 — NOSQL LÀ GÌ ============ -->
+<section class="slide divider" data-section="divider-01">
+  <div class="divider-num">01</div>
+  <div class="section-tag"><i></i>PHẦN 1</div>
+  <h2>NoSQL là gì?</h2>
+  <p class="lead">Không phải một sản phẩm, không phải "chống SQL" — mà là một họ database lưu dữ liệu không theo bảng quan hệ.</p>
+  <div class="foot"><span class="num"></span><span>01 · nosql là gì</span></div>
+  <aside class="notes">
+    <p>Phần đầu tiên: NoSQL là gì. Mình sẽ bắt đầu bằng một câu hỏi rất đời thường trước khi đưa ra định nghĩa.</p>
+  </aside>
+</section>
+
+<section class="slide" data-section="hook">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-question"/></svg>Câu hỏi mở đầu</div>
+  <h2>Một shop bán cả laptop lẫn áo thun. Lưu hai sản phẩm này vào <b>một bảng</b> như thế nào?</h2>
+  <div class="split">
+    <div class="chart meter">
+      <svg viewBox="0 0 680 250" role="img" aria-label="Bảng products với nhiều ô NULL">
+        <rect x="0" y="0" width="680" height="40" rx="8" class="sv-box-hot"/>
+        <text x="16" y="25" class="sv-hot">id</text>
+        <text x="62" y="25" class="sv-hot">name</text>
+        <text x="200" y="25" class="sv-hot">price</text>
+        <text x="290" y="25" class="sv-hot">cpu</text>
+        <text x="380" y="25" class="sv-hot">ram_gb</text>
+        <text x="470" y="25" class="sv-hot">size</text>
+        <text x="550" y="25" class="sv-hot">color</text>
+        <text x="620" y="25" class="sv-hot">…</text>
+
+        <rect x="0" y="50" width="680" height="40" rx="8" class="sv-box"/>
+        <text x="16" y="75" class="sv-lbl">1</text>
+        <text x="62" y="75" class="sv-lbl">Laptop X14</text>
+        <text x="200" y="75" class="sv-lbl">25.9tr</text>
+        <text x="290" y="75" class="sv-lbl">i7</text>
+        <text x="380" y="75" class="sv-lbl">16</text>
+        <text x="470" y="75" class="sv-risk">NULL</text>
+        <text x="550" y="75" class="sv-risk">NULL</text>
+
+        <rect x="0" y="100" width="680" height="40" rx="8" class="sv-box"/>
+        <text x="16" y="125" class="sv-lbl">2</text>
+        <text x="62" y="125" class="sv-lbl">Áo thun basic</text>
+        <text x="200" y="125" class="sv-lbl">199k</text>
+        <text x="290" y="125" class="sv-risk">NULL</text>
+        <text x="380" y="125" class="sv-risk">NULL</text>
+        <text x="470" y="125" class="sv-lbl">M</text>
+        <text x="550" y="125" class="sv-lbl">đen</text>
+
+        <g data-step="1">
+          <rect x="0" y="150" width="680" height="40" rx="8" class="sv-box-risk"/>
+          <text x="16" y="175" class="sv-lbl">3</text>
+          <text x="62" y="175" class="sv-lbl">Tai nghe BT</text>
+          <text x="200" y="175" class="sv-lbl">1.2tr</text>
+          <text x="290" y="175" class="sv-risk">NULL</text>
+          <text x="380" y="175" class="sv-risk">NULL</text>
+          <text x="470" y="175" class="sv-risk">NULL</text>
+          <text x="550" y="175" class="sv-risk">NULL</text>
+          <text x="16" y="225" class="sv-risk">+ bluetooth_ver, battery_h … → ALTER TABLE lần nữa</text>
+        </g>
+      </svg>
+    </div>
+    <ul class="points tight">
+      <li><span class="chip risk">vấn đề</span> Mỗi loại sản phẩm có thuộc tính riêng. Gộp chung một bảng thì <b>đầy NULL</b>.</li>
+      <li data-step="1">Thêm loại sản phẩm mới là phải <code>ALTER TABLE</code> trên bảng hàng triệu dòng.</li>
+      <li data-step="2">Tách mỗi loại một bảng thì đọc 1 laptop dễ, nhưng giỏ hàng, tìm kiếm, sắp xếp trên <b>mọi sản phẩm</b> lại phải <b>UNION</b> nhiều bảng.</li>
+      <li data-step="3"><span class="chip hot">ý tưởng</span> Nếu mỗi sản phẩm là <b>một document</b> với các trường của riêng nó thì sao?</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>câu hỏi mở đầu</span></div>
+  <aside class="notes">
+    <p>Hãy tưởng tượng mình làm một shop online. Laptop có CPU, RAM. Áo thun có size, màu. Nếu nhét tất cả vào một bảng <code>products</code> thì sao? <b>Đầy NULL</b>: laptop không có size, áo thì không có CPU.</p>
+    <p><i>[Nhấn → để hiện dòng tai nghe]</i> Giờ thêm tai nghe bluetooth — thêm cột nữa, lại <code>ALTER TABLE</code> trên bảng hàng triệu dòng. <i>[→]</i> Còn nếu tách mỗi loại một bảng — bảng laptop, bảng áo — thì đọc một laptop rất dễ. Nhưng giỏ hàng trỏ tới bảng nào? Tìm "mọi sản phẩm dưới 500k" thì phải UNION qua tất cả các bảng, và mỗi loại mới lại thêm một bảng, sửa lại mọi query đó.</p>
+    <p><i>[→]</i> Vậy nếu mỗi sản phẩm là một "tài liệu" tự mô tả, có đúng những trường của nó thôi? Đó chính là một trong các ý tưởng gốc của NoSQL.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="definition">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-db"/></svg>Định nghĩa</div>
+  <h2><b>NoSQL = "Not only SQL"</b> — các database không dùng mô hình bảng quan hệ làm cách lưu trữ chính.</h2>
+  <div class="two">
+    <div class="stack">
+      <div class="code-label">Quan hệ (SQL): tách bảng, JOIN khi đọc</div>
+<pre class="code sm">products(<span class="hl">id</span>, name, price)
+laptop_specs(<span class="hl">product_id</span>, cpu, ram_gb)
+shirt_specs(<span class="hl">product_id</span>, size, color)
+
+SELECT p.*, l.cpu, l.ram_gb
+FROM products p
+JOIN laptop_specs l ON l.product_id = p.id
+WHERE p.id = 1;</pre>
+    </div>
+    <div class="stack" data-step="1">
+      <div class="code-label">Document (NoSQL): một bản ghi tự mô tả</div>
+<pre class="code sm">{ "_id": 1, "name": "Laptop X14",
+  "price": 25990000,
+  <span class="hl">"specs": { "cpu": "i7", "ram_gb": 16 }</span> }
+
+{ "_id": 2, "name": "Áo thun basic",
+  "price": 199000,
+  <span class="hl">"size": "M", "color": "đen"</span> }
+
+db.products.findOne({ _id: 1 })</pre>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>định nghĩa</span></div>
+  <aside class="notes">
+    <p>Định nghĩa: NoSQL thường được hiểu là <b>"Not only SQL"</b> — các database <b>không lấy bảng quan hệ</b> (hàng, cột, khóa ngoại) làm cách lưu chính.</p>
+    <p>Bên trái là cách SQL làm: tách ba bảng, khi đọc thì JOIN lại. <i>[→]</i> Bên phải là cách một document database làm: mỗi sản phẩm là một JSON, laptop có <code>specs</code>, áo có <code>size</code>, <code>color</code>. Đọc một lần là đủ, không JOIN.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>

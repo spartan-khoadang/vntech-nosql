@@ -1,0 +1,45 @@
+<!-- ============ OUTLINE ============ -->
+<!-- Single source for the section list: the script below also copies it into every divider slide. -->
+<section class="slide" data-section="outline">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-list"/></svg>Nội dung</div>
+  <h2>Phần 1 đi từ khái niệm, qua lý do ra đời và bốn loại NoSQL, tới các khái niệm phân tán. Use case để dành cho Phần 2.</h2>
+  <ol class="outline" id="outline-list" style="grid-template-rows: repeat(3, 1fr);">
+    <li data-divider="divider-01"><span class="n">01</span><span class="t">NoSQL là gì?</span><span class="p"></span><span class="d">Ví dụ mở đầu, định nghĩa "Not only SQL"</span></li>
+    <li data-divider="divider-02"><span class="n">02</span><span class="t">Why NoSQL?</span><span class="p"></span><span class="d">Đã có SQL, sao còn cần NoSQL</span></li>
+    <li data-divider="divider-03"><span class="n">03</span><span class="t">Bốn loại NoSQL</span><span class="p"></span><span class="d">Key-value, document, wide-column, graph</span></li>
+    <li data-divider="divider-04"><span class="n">04</span><span class="t">Khái niệm phân tán</span><span class="p"></span><span class="d">ACID vs BASE, CAP, quorum</span></li>
+    <li data-divider="divider-05"><span class="n">05</span><span class="t">Tổng kết</span><span class="p"></span><span class="d">Cây quyết định, năm điều nên nhớ</span></li>
+    <li class="later"><span class="n">P2</span><span class="t">Phần 2 · Use cases</span><span class="p">buổi sau</span><span class="d">Mỗi loại NoSQL trong hệ thống thật</span></li>
+  </ol>
+  <div class="foot"><span class="num"></span><span>outline</span></div>
+  <aside class="notes">
+    <p>Lộ trình hôm nay có năm phần. <b>Một</b>, NoSQL là gì. <b>Hai</b>, tại sao cần NoSQL khi SQL đã rất tốt — đây là phần quan trọng nhất, vì nếu không hiểu "tại sao" thì rất dễ chọn sai. <b>Ba</b>, bốn loại NoSQL. <b>Bốn</b>, các khái niệm phân tán: ACID và BASE, CAP, quorum. <b>Năm</b>, tổng kết.</p>
+    <p>Mục cuối mờ đi là Phần 2 — use case — mình sẽ làm ở buổi sau.</p>
+    <p><i>(~30 giây)</i></p>
+  </aside>
+</section>
+
+<script>
+(() => {
+  const items = [...document.querySelectorAll('#outline-list > li[data-divider]')];
+  const slides = [...document.querySelectorAll('#deck .slide')];
+  const pad = (n) => String(n).padStart(2, '0');
+
+  items.forEach((li, i) => {
+    const divider = document.querySelector(`.slide.divider[data-section="${li.dataset.divider}"]`);
+    if (!divider) return;
+    li.querySelector('.p').textContent = `slide ${slides.indexOf(divider) + 1}`;
+
+    const state = (j) => (j < i ? 'done' : j === i ? 'now' : '');
+    const aside = document.createElement('aside');
+    aside.className = 'outline-mini';
+    aside.setAttribute('aria-label', 'Nội dung');
+    aside.innerHTML = `
+      <div class="om-head"><span>Phần</span><b>${pad(i + 1)}</b><span>/ ${pad(items.length)}</span></div>
+      <div class="om-rail">${items.map((_, j) => `<i class="${state(j)}"></i>`).join('')}</div>
+      <ol>${items.map((it, j) =>
+        `<li class="${state(j)}"><span>${pad(j + 1)}</span>${it.querySelector('.t').textContent}</li>`).join('')}</ol>`;
+    divider.insertBefore(aside, divider.querySelector('.foot'));
+  });
+})();
+</script>

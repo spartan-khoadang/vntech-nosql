@@ -1,0 +1,267 @@
+<!-- ============ SECTION 4 — DISTRIBUTED BASICS ============ -->
+<section class="slide divider" data-section="divider-04">
+  <div class="divider-num">04</div>
+  <div class="section-tag"><i></i>PHẦN 4</div>
+  <h2>Khái niệm phân tán</h2>
+  <p class="lead">Khi dữ liệu nằm trên nhiều máy, mình phải chọn giữa đúng tuyệt đối và luôn sẵn sàng. Ba khái niệm giải thích lựa chọn đó.</p>
+  <div class="foot"><span class="num"></span><span>04 · khái niệm phân tán</span></div>
+  <aside class="notes">
+    <p>Phần bốn: các khái niệm phân tán. Vì NoSQL chạy trên nhiều máy, có vài khái niệm mà ai làm NoSQL cũng phải biết: ACID và BASE, định lý CAP, và quorum. Mình sẽ đi nhanh và trực quan.</p>
+  </aside>
+</section>
+
+<section class="slide" data-section="acid-base">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-shield"/></svg>ACID vs BASE</div>
+  <h2>Hai triết lý: <b>luôn đúng ngay lập tức</b>, hay <b>luôn trả lời và đúng dần</b></h2>
+  <div class="two" style="margin-block: auto;">
+    <div class="card ok">
+      <div class="k">ACID · SQL truyền thống</div>
+      <ul class="points tight">
+        <li><b>A</b>tomicity — làm hết hoặc không làm gì</li>
+        <li><b>C</b>onsistency — luôn thỏa mọi ràng buộc</li>
+        <li><b>I</b>solation — giao dịch song song không giẫm chân nhau</li>
+        <li><b>D</b>urability — đã commit thì không mất</li>
+      </ul>
+      <div class="ex">ví dụ: chuyển tiền giữa hai tài khoản</div>
+    </div>
+    <div class="card" data-step="1">
+      <div class="k">BASE · nhiều hệ NoSQL</div>
+      <ul class="points tight">
+        <li><b>B</b>asically <b>A</b>vailable — luôn trả lời, kể cả khi có máy chết; câu trả lời có thể là dữ liệu <b>cũ</b></li>
+        <li><b>S</b>oft state — dữ liệu trên một máy có thể <b>tự đổi</b> dù không ai ghi, vì các bản sao đang đồng bộ ngầm</li>
+        <li><b>E</b>ventual consistency — không hứa đúng ngay; chỉ hứa ngừng ghi thì mọi bản sao <b>cuối cùng</b> sẽ giống nhau</li>
+      </ul>
+      <div class="ex">ví dụ: số like của một bài viết lệch vài giây cũng không sao</div>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>acid vs base</span></div>
+  <aside class="notes">
+    <p><b>ACID</b> là lời hứa của SQL truyền thống: Atomicity — làm hết hoặc không làm gì; Consistency — luôn thỏa ràng buộc; Isolation — các giao dịch song song không giẫm chân nhau; Durability — đã commit thì không mất. Ví dụ kinh điển: chuyển tiền, không được phép trừ bên này mà chưa cộng bên kia. Để giữ lời hứa đó, hệ thống <b>thà bắt chờ hoặc báo lỗi</b> còn hơn trả kết quả sai.</p>
+    <p><i>[→]</i> <b>BASE</b> là triết lý ngược lại, của nhiều hệ NoSQL: <b>thà trả lời ngay, đúng dần sau</b>. Ba chữ cái:</p>
+    <p><b>Basically Available</b> — hệ thống luôn trả lời, kể cả khi vài máy chết hay mạng chập chờn. Chữ "basically" nghĩa là "về cơ bản": câu trả lời có thể là dữ liệu cũ, nhưng không phải lỗi.</p>
+    <p><b>Soft state</b> — đây là chữ khó nhất. Trong SQL, dữ liệu chỉ đổi khi có người ghi. Ở đây, dữ liệu trên một máy có thể <b>tự đổi dù không ai ghi vào nó</b>, vì các máy đang đồng bộ ngầm với nhau. Đọc hai lần liên tiếp có thể ra hai kết quả khác nhau.</p>
+    <p><b>Eventual consistency</b> — là lời hứa của hệ thống: không hứa đúng ngay, chỉ hứa nếu ngừng ghi thì <b>cuối cùng</b> mọi bản sao sẽ giống nhau, thường chỉ sau vài mili giây đến vài giây.</p>
+    <p>Ba chữ này thật ra là <b>một cơ chế nhìn từ ba góc</b> — slide sau mình sẽ cho mọi người thấy bằng một ví dụ cụ thể.</p>
+    <p><i>(~2,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="base-timeline">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-clock"/></svg>BASE qua một ví dụ</div>
+  <h2>Một bài viết có <b>100 like</b>, lưu trên <b>3 máy</b>. Hai người bấm like — chuyện gì xảy ra?</h2>
+  <div class="split">
+    <div class="chart">
+      <svg viewBox="0 0 560 300" role="img" aria-label="Dòng thời gian số like trên 3 bản sao A, B, C từ t0 đến t3">
+        <defs>
+          <marker id="base-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 10 5 0 10Z" class="sv-acc-fill"/>
+          </marker>
+        </defs>
+        <rect data-step="3" x="450" y="38" width="100" height="184" rx="12" class="sv-band-hot"/>
+
+        <text x="0" y="76" class="sv-lbl">Máy A</text>
+        <text x="0" y="136" class="sv-lbl">Máy B</text>
+        <text x="0" y="196" class="sv-lbl">Máy C</text>
+
+        <text x="140" y="26" text-anchor="middle" class="sv-lbl-sm">t0 · ban đầu</text>
+        <rect x="96" y="50" width="88" height="40" rx="8" class="sv-box"/><text x="140" y="76" text-anchor="middle" class="sv-lbl">100</text>
+        <rect x="96" y="110" width="88" height="40" rx="8" class="sv-box"/><text x="140" y="136" text-anchor="middle" class="sv-lbl">100</text>
+        <rect x="96" y="170" width="88" height="40" rx="8" class="sv-box"/><text x="140" y="196" text-anchor="middle" class="sv-lbl">100</text>
+
+        <g data-step="1">
+          <text x="260" y="26" text-anchor="middle" class="sv-hot">t1 · ghi</text>
+          <rect x="216" y="50" width="88" height="40" rx="8" class="sv-box-hot"/><text x="260" y="76" text-anchor="middle" class="sv-hot">102 ✓ OK</text>
+          <rect x="216" y="110" width="88" height="40" rx="8" class="sv-box"/><text x="260" y="136" text-anchor="middle" class="sv-lbl">100</text>
+          <rect x="216" y="170" width="88" height="40" rx="8" class="sv-box-risk"/><text x="260" y="196" text-anchor="middle" class="sv-risk">100 (cũ)</text>
+          <text x="260" y="246" text-anchor="middle" class="sv-lbl-sm">đọc từ C → 100: cũ, nhưng vẫn có câu trả lời</text>
+        </g>
+
+        <g data-step="2">
+          <text x="380" y="26" text-anchor="middle" class="sv-lbl-sm">t2 · đồng bộ</text>
+          <text x="500" y="26" text-anchor="middle" class="sv-hot">t3 · hội tụ</text>
+          <rect x="336" y="50" width="88" height="40" rx="8" class="sv-box"/><text x="380" y="76" text-anchor="middle" class="sv-lbl">102</text>
+          <rect x="336" y="110" width="88" height="40" rx="8" class="sv-box-hot"/><text x="380" y="136" text-anchor="middle" class="sv-hot">102</text>
+          <rect x="336" y="170" width="88" height="40" rx="8" class="sv-box"/><text x="380" y="196" text-anchor="middle" class="sv-lbl">100</text>
+          <rect x="456" y="50" width="88" height="40" rx="8" class="sv-box"/><text x="500" y="76" text-anchor="middle" class="sv-lbl">102</text>
+          <rect x="456" y="110" width="88" height="40" rx="8" class="sv-box"/><text x="500" y="136" text-anchor="middle" class="sv-lbl">102</text>
+          <rect x="456" y="170" width="88" height="40" rx="8" class="sv-box-hot"/><text x="500" y="196" text-anchor="middle" class="sv-hot">102</text>
+          <path d="M304 82 L336 118" class="sv-acc" marker-end="url(#base-arr)"/>
+          <path d="M424 142 L456 178" class="sv-acc" marker-end="url(#base-arr)"/>
+          <text x="400" y="270" text-anchor="middle" class="sv-lbl-sm">B, C tự đổi 100 → 102 dù không ai ghi vào chúng</text>
+        </g>
+
+        <g data-step="3">
+          <text x="500" y="294" text-anchor="middle" class="sv-hot">A = B = C = 102</text>
+        </g>
+      </svg>
+    </div>
+    <ul class="points tight">
+      <li data-step="1"><span class="chip hot">BA</span> <b>Basically Available</b> — A ghi xong, trả OK ngay, <b>không chờ</b> B và C. Ai đọc từ C vẫn nhận 100: cũ, nhưng không lỗi.</li>
+      <li data-step="2"><span class="chip hot">S</span> <b>Soft state</b> — C đổi từ 100 thành 102 mà <b>không ai ghi vào C</b>: các máy tự đồng bộ ngầm.</li>
+      <li data-step="3"><span class="chip hot">E</span> <b>Eventual consistency</b> — ngừng ghi thì cả ba <b>cuối cùng</b> cùng là 102, thường sau vài ms đến vài giây.</li>
+      <li data-step="4"><span class="chip risk">lưu ý</span> BASE <b>không phải mất dữ liệu</b>: 2 like vẫn còn, chỉ đến các máy chậm hơn. Hợp với like, view, feed; <b>không</b> hợp với số dư, tồn kho.</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>base · ví dụ</span></div>
+  <aside class="notes">
+    <p>Một bài viết đang có <b>100 like</b>. Dữ liệu được sao ra <b>3 máy</b> A, B, C — lúc đầu cả ba đều ghi 100. Giờ có hai người bấm like, request ghi đi vào máy A.</p>
+    <p><i>[→]</i> Thời điểm t1: A cập nhật thành 102 và <b>trả OK ngay</b> cho người dùng, không chờ B và C. Đúng lúc này, ai đó đọc từ máy C sẽ thấy 100 — dữ liệu cũ, nhưng vẫn là một câu trả lời, không phải lỗi, không phải chờ. Đó là <b>Basically Available</b>: luôn trả lời, chấp nhận có thể chưa mới nhất.</p>
+    <p><i>[→]</i> t2, t3: A gửi cập nhật cho B, rồi tới C, ở chế độ ngầm. Mọi người để ý máy C: <b>không ai ghi gì vào C</b>, vậy mà giá trị của nó tự đổi từ 100 thành 102. Đó là <b>Soft state</b> — trạng thái "mềm", có thể tự thay đổi do đồng bộ. Trong SQL thì không có chuyện này: dữ liệu chỉ đổi khi có transaction commit.</p>
+    <p><i>[→]</i> t3: cả ba máy cùng là 102. Đó là <b>Eventual consistency</b> — lời hứa rằng nếu ngừng ghi, các bản sao cuối cùng sẽ giống nhau. Hệ thống không hứa <i>khi nào</i>, nhưng thực tế thường chỉ vài mili giây đến vài giây.</p>
+    <p>Tóm lại một câu: ghi nhanh không chờ đủ máy, nên các máy tạm lệch nhau, đồng bộ dần, rồi cuối cùng giống nhau. Ba chữ B-A-S-E chỉ là ba góc nhìn của cùng một chuyện đó.</p>
+    <p><i>[→]</i> Hai lưu ý. Thứ nhất, BASE <b>không có nghĩa là mất dữ liệu</b> — 2 like vẫn còn đó, chỉ đến các máy chậm hơn một chút. Thứ hai, cách kiểm tra có nên dùng BASE: nếu người dùng thấy dữ liệu <b>cũ vài giây</b> mà <b>không ai bị thiệt</b> — như like, lượt xem, feed — thì ổn. Còn số dư tài khoản hay tồn kho lúc đặt hàng thì không: thấy cũ vài giây là có thể bán quá số hàng đang có.</p>
+    <p>Vậy có cách nào để hệ BASE vẫn đọc được bản mới nhất khi cần không? Có — nhưng trước hết mình cần hiểu vì sao phải đánh đổi như vậy. Đó là định lý CAP.</p>
+    <p><i>(~2,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="cap">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-split"/></svg>Định lý CAP</div>
+  <h2>Khi mạng giữa các máy bị đứt, hệ thống phải chọn: <b>trả lời đúng</b> hay <b>luôn trả lời</b></h2>
+  <div class="split even">
+    <div class="chart meter">
+      <svg viewBox="0 0 520 305" role="img" aria-label="Tam giác CAP">
+        <path d="M260 30 L470 270 L50 270 Z" class="sv-line-soft" stroke-width="2"/>
+        <circle cx="260" cy="30" r="22" class="sv-box-hot"/><text x="260" y="36" text-anchor="middle" class="sv-hot">C</text>
+        <circle cx="50" cy="270" r="22" class="sv-box-hot"/><text x="50" y="276" text-anchor="middle" class="sv-hot">A</text>
+        <circle cx="470" cy="270" r="22" class="sv-box-risk"/><text x="470" y="276" text-anchor="middle" class="sv-risk">P</text>
+        <text x="300" y="30" class="sv-lbl">Consistency</text>
+        <text x="300" y="48" class="sv-lbl-sm">luôn đọc bản mới nhất</text>
+        <text x="20" y="215" class="sv-lbl">Availability</text>
+        <text x="20" y="233" class="sv-lbl-sm">luôn có phản hồi</text>
+        <text x="330" y="215" class="sv-lbl">Partition tolerance</text>
+        <text x="330" y="233" class="sv-lbl-sm">chịu được đứt mạng</text>
+        <text x="125" y="140" text-anchor="middle" class="sv-lbl-sm">CA</text>
+        <text x="125" y="156" text-anchor="middle" class="sv-lbl-sm">(chỉ khi 1 máy)</text>
+        <g data-step="1">
+          <text x="400" y="140" text-anchor="middle" class="sv-hot">CP</text>
+          <text x="260" y="262" text-anchor="middle" class="sv-hot">AP</text>
+          <text x="260" y="298" text-anchor="middle" class="sv-risk">P là bắt buộc → chọn cạnh CP hoặc AP</text>
+        </g>
+      </svg>
+    </div>
+    <div class="stack">
+      <ul class="points tight">
+        <li>Mạng giữa các máy <b>chắc chắn có lúc đứt</b>, nên P không phải lựa chọn. Thực tế chỉ chọn giữa <b>CP</b> và <b>AP</b>.</li>
+      </ul>
+      <table class="tbl" data-step="1">
+        <thead><tr><th>Kiểu</th><th>Khi mạng đứt</th><th>Ví dụ</th></tr></thead>
+        <tbody>
+          <tr><td class="name">CP</td><td>Từ chối request để không trả sai</td><td>MongoDB, HBase, etcd</td></tr>
+          <tr><td class="name">AP</td><td>Vẫn trả lời, có thể là dữ liệu cũ</td><td>Cassandra, DynamoDB, CouchDB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>cap</span></div>
+  <aside class="notes">
+    <p><b>Định lý CAP</b> nói rằng trong hệ phân tán, khi mạng giữa các máy bị đứt — gọi là partition — hệ thống chỉ đảm bảo được một trong hai: <b>C</b>, mọi lần đọc đều thấy bản mới nhất; hoặc <b>A</b>, mọi request đều được trả lời.</p>
+    <p>Hay bị hiểu nhầm là "chọn 2 trong 3". Thực tế, mạng <b>chắc chắn có lúc đứt</b>, nên P là bắt buộc. <i>[→]</i> Lựa chọn thật là <b>CP</b> hay <b>AP</b>.</p>
+    <p>CP — như MongoDB mặc định, HBase — sẽ từ chối request thay vì trả dữ liệu có thể sai. AP — như Cassandra, DynamoDB — vẫn trả lời, chấp nhận dữ liệu tạm cũ, đồng bộ sau.</p>
+    <p>Nghe vẫn hơi trừu tượng, nên mình đi qua một ví dụ cụ thể.</p>
+    <p><i>(~2 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="cap-example">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-split"/></svg>CAP qua một ví dụ</div>
+  <h2>Shop còn <b>1 chiếc áo</b>. Mạng Hà Nội ↔ TP.HCM đứt, hai khách cùng bấm mua.</h2>
+  <div class="split">
+    <div class="chart">
+      <svg viewBox="0 0 560 300" role="img" aria-label="Ba máy ở Hà Nội và TP.HCM, mạng giữa hai nơi bị đứt, hai khách cùng mua chiếc áo cuối cùng">
+        <rect x="0" y="30" width="270" height="190" rx="14" class="sv-wait"/>
+        <rect x="330" y="30" width="230" height="190" rx="14" class="sv-wait"/>
+        <text x="18" y="56" class="sv-lbl">Hà Nội · 2 máy</text>
+        <text x="348" y="56" class="sv-lbl">TP.HCM · 1 máy</text>
+
+        <rect x="18" y="74" width="114" height="58" rx="8" class="sv-box"/>
+        <text x="75" y="96" text-anchor="middle" class="sv-lbl-sm">máy 1</text>
+        <text x="75" y="119" text-anchor="middle" class="sv-lbl">kho = 1</text>
+        <rect x="140" y="74" width="114" height="58" rx="8" class="sv-box"/>
+        <text x="197" y="96" text-anchor="middle" class="sv-lbl-sm">máy 2</text>
+        <text x="197" y="119" text-anchor="middle" class="sv-lbl">kho = 1</text>
+        <rect x="388" y="74" width="114" height="58" rx="8" class="sv-box"/>
+        <text x="445" y="96" text-anchor="middle" class="sv-lbl-sm">máy 3</text>
+        <text x="445" y="119" text-anchor="middle" class="sv-lbl">kho = 1</text>
+
+        <path d="M254 103 L388 103" class="sv-dash" stroke-width="2"/>
+        <text x="300" y="78" text-anchor="middle" class="sv-lbl-sm">đồng bộ</text>
+
+        <g data-step="1">
+          <circle cx="321" cy="103" r="15" class="sv-box-risk"/>
+          <path d="M314 96 L328 110 M328 96 L314 110" class="sv-strike" stroke-width="2.5"/>
+          <text x="321" y="140" text-anchor="middle" class="sv-risk">mạng đứt</text>
+        </g>
+
+        <g data-step="2">
+          <rect x="18" y="74" width="114" height="58" rx="8" class="sv-box-hot"/>
+          <text x="75" y="96" text-anchor="middle" class="sv-lbl-sm">máy 1</text>
+          <text x="75" y="119" text-anchor="middle" class="sv-hot">kho = 0</text>
+          <rect x="140" y="74" width="114" height="58" rx="8" class="sv-box-hot"/>
+          <text x="197" y="96" text-anchor="middle" class="sv-lbl-sm">máy 2</text>
+          <text x="197" y="119" text-anchor="middle" class="sv-hot">kho = 0</text>
+          <rect x="388" y="74" width="114" height="58" rx="8" class="sv-box-risk"/>
+          <text x="445" y="96" text-anchor="middle" class="sv-lbl-sm">máy 3</text>
+          <text x="445" y="119" text-anchor="middle" class="sv-risk">kho = 1 ?</text>
+          <path d="M136 186 L136 142" class="sv-acc" marker-end="url(#cap-arr)"/>
+          <text x="136" y="204" text-anchor="middle" class="sv-hot">An mua ✓</text>
+          <path d="M445 186 L445 142" class="sv-acc" marker-end="url(#cap-arr)"/>
+          <text x="445" y="204" text-anchor="middle" class="sv-hot">Bình bấm mua</text>
+          <text x="280" y="256" text-anchor="middle" class="sv-lbl">Máy 3 không biết An đã mua.</text>
+          <text x="280" y="280" text-anchor="middle" class="sv-risk">Từ chối Bình, hay bán cho Bình?</text>
+        </g>
+        <defs>
+          <marker id="cap-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 10 5 0 10Z" class="sv-acc-fill"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <div class="stack">
+      <div class="card" data-step="3">
+        <div class="k">CP · thà từ chối còn hơn sai</div>
+        <p>Máy 3 báo Bình: <b>"Hệ thống bận, thử lại sau."</b> Hà Nội có 2/3 máy (đa số) nên vẫn bán bình thường.</p>
+        <p><b>Giữ C:</b> không bán trùng. <b>Mất A:</b> Bình bị từ chối.</p>
+      </div>
+      <div class="card" data-step="4">
+        <div class="k">AP · thà trả lời còn hơn từ chối</div>
+        <p>Máy 3 thấy còn 1, <b>bán luôn</b> cho Bình.</p>
+        <p><b>Giữ A:</b> ai cũng mua được. <b>Mất C:</b> 1 áo bán cho 2 người, nối mạng lại phải hủy một đơn.</p>
+      </div>
+      <p class="caption" data-step="5">Đổi tồn kho thành <b>số like</b>: lệch 1 like không ai thiệt, nên <b>AP</b> hợp lý. Sai một chút là <b>mất tiền</b> thì chọn <b>CP</b>.</p>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>cap · ví dụ</span></div>
+  <aside class="notes">
+    <p>Một ví dụ cụ thể. Shop online còn đúng <b>1 chiếc áo</b>. Dữ liệu tồn kho được lưu trên 3 máy: 2 máy ở Hà Nội, 1 máy ở TP.HCM. Bình thường, ba máy liên tục báo cho nhau mỗi khi có thay đổi.</p>
+    <p><i>[→]</i> Rồi cáp mạng giữa Hà Nội và TP.HCM bị đứt. Cả 3 máy vẫn chạy, khách vẫn vào web được, nhưng hai nơi không nói chuyện được với nhau. Đó chính là <b>partition</b>.</p>
+    <p><i>[→]</i> Đúng lúc đó, An ở Hà Nội bấm mua — máy Hà Nội trừ kho, còn 0. Cùng lúc, Bình ở TP.HCM cũng bấm mua. Máy 3 vẫn thấy kho bằng 1, vì nó <b>không biết An vừa mua</b>. Giờ máy 3 phải chọn: từ chối Bình, hay bán cho Bình?</p>
+    <p><i>[→]</i> Cách thứ nhất là <b>CP</b>: thà từ chối còn hơn sai. Máy 3 không liên lạc được Hà Nội, không chắc còn hàng, nên trả lỗi "hệ thống bận, thử lại sau". Phía Hà Nội có 2 trên 3 máy, là đa số, nên vẫn bán bình thường. Kết quả: không bao giờ bán trùng — giữ được C — nhưng khách ở TP.HCM bị từ chối — mất A.</p>
+    <p><i>[→]</i> Cách thứ hai là <b>AP</b>: thà trả lời còn hơn từ chối. Máy 3 thấy còn 1 thì bán luôn. Ai cũng mua được — giữ được A — nhưng một chiếc áo đã bán cho hai người — mất C. Khi mạng nối lại, hệ thống phát hiện xung đột, phải hủy một đơn, hoàn tiền, xin lỗi khách.</p>
+    <p>Và không có cách thứ ba: máy 3 không thể vừa trả lời ngay vừa chắc chắn đúng, vì nó không có cách nào biết Hà Nội vừa làm gì.</p>
+    <p><i>[→]</i> Nhưng nếu đổi tồn kho thành <b>số like</b> thì sao? Lệch một like trong vài phút không ai thiệt, nối mạng lại là tự đúng — chọn AP là hợp lý, chặn người dùng chỉ vì sợ lệch một like mới là vô lý. Nên CAP không có lựa chọn đúng hay sai, chỉ có lựa chọn <b>hợp với dữ liệu</b>: sai một chút là mất tiền thì CP, sai một chút không ai thiệt thì AP.</p>
+    <p><i>(~2,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide dia" data-section="quorum">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-shield"/></svg>Quorum</div>
+  <h2><b>N</b> bản sao: ghi chờ <b>W</b> máy, đọc hỏi <b>R</b> máy. Nếu <b>R + W &gt; N</b> thì luôn đọc được bản mới nhất.</h2>
+  <div class="body" style="min-height:0;">
+    <div class="diagram-embed fit" style="aspect-ratio: 1.55;">
+      <iframe src="diagrams/quorum-read-write.html?embed=1" loading="lazy" title="Quorum read write"></iframe>
+    </div>
+    <div class="diagram-caption">
+      <span>N=3, W=2, R=2: tập máy đọc và tập máy ghi luôn giao nhau ít nhất một máy. Replica cũ được sửa bằng read repair.</span>
+      <a href="diagrams/quorum-read-write.html" target="_blank" rel="noopener">Mở toàn màn hình ↗</a>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>quorum · r + w &gt; n</span></div>
+  <aside class="notes">
+    <p>Vậy các hệ AP như Cassandra làm sao vẫn đọc đúng? Câu trả lời là <b>quorum</b>.</p>
+    <p>Mỗi dữ liệu có <b>N = 3</b> bản sao. Khi ghi giá mới bằng 200, coordinator gửi tới cả ba, nhưng chỉ chờ <b>W = 2</b> máy xác nhận là trả OK. Replica 3 đang mạng chậm, chưa nhận được.</p>
+    <p>Khi đọc, coordinator hỏi <b>R = 2</b> máy — giả sử trúng replica 2 và replica 3. Replica 3 trả giá cũ 150, replica 2 trả 200. Coordinator chọn bản có timestamp mới nhất, trả 200 cho client, và gửi <b>read repair</b> để sửa replica 3.</p>
+    <p>Tại sao luôn đúng? Vì <b>2 + 2 &gt; 3</b>: hai máy đọc và hai máy ghi trong tổng ba máy thì luôn chung ít nhất một máy. Muốn ghi nhanh hơn thì giảm W, đổi lại là rủi ro đọc phải dữ liệu cũ.</p>
+    <p><i>(~2,5 phút)</i></p>
+  </aside>
+</section>

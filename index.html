@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NoSQL — Phần 1</title>
+<meta name="description" content="Phần 1: NoSQL là gì, vì sao cần NoSQL khi đã có SQL, bốn loại NoSQL phổ biến và các khái niệm phân tán nền tảng." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%2313121d'/%3E%3Cellipse cx='12' cy='7.5' rx='5.5' ry='2' stroke='%239d94ff' stroke-width='1.6' fill='none'/%3E%3Cpath d='M6.5 7.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9' stroke='%239d94ff' stroke-width='1.6' fill='none'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap&subset=vietnamese" rel="stylesheet" />
+<link rel="stylesheet" href="css/deck.css" />
+</head>
+<body>
+
+<svg class="icons" aria-hidden="true">
+  <symbol id="ic-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5.5" rx="7" ry="2.5" /><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13" /><path d="M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5" /></symbol>
+  <symbol id="ic-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="8" cy="15" r="4" /><path d="M11 12 20 3" /><path d="M16 7l3 3" /><path d="M13 10l2.5 2.5" /></symbol>
+  <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4" /><path d="M9 11h1.5M9 14.5h6M9 18h4" /><path d="M12 11h3" /></symbol>
+  <symbol id="ic-cols" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="1.5" /><path d="M3 9h18" /><path d="M8 9v11M13 9v11M17 9v11" /></symbol>
+  <symbol id="ic-graph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6" cy="6" r="2.5" /><circle cx="18" cy="7" r="2.5" /><circle cx="12" cy="18" r="2.5" /><path d="M8.4 6.2 15.5 6.8M7.3 8.2l3.6 7.6M16.9 9.2l-3.7 6.7" /></symbol>
+  <symbol id="ic-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="4" width="16" height="6" rx="1.5" /><rect x="4" y="14" width="16" height="6" rx="1.5" />
+    <circle cx="7.2" cy="7" r="0.9" fill="currentColor" stroke="none" /><circle cx="7.2" cy="17" r="0.9" fill="currentColor" stroke="none" /></symbol>
+  <symbol id="ic-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v17" /><path d="M12 20h5M12 20H7" /><path d="M5 7h14" />
+    <path d="M5 7 2 13a3 3 0 0 0 6 0Z" /><path d="M19 7l-3 6a3 3 0 0 0 6 0Z" /></symbol>
+  <symbol id="ic-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 6h11M9 12h11M9 18h11" /><circle cx="4.5" cy="6" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none" /><circle cx="4.5" cy="18" r="1.3" fill="currentColor" stroke="none" /></symbol>
+  <symbol id="ic-question" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" /><path d="M9.3 9.2a2.7 2.7 0 0 1 5.2.9c0 1.6-1.1 2.1-2.1 3-.6.5-.9 1-.9 1.8" />
+    <circle cx="12" cy="17.2" r="0.6" fill="currentColor" stroke="none" /></symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l4 2" /></symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3.2 19 6v6c0 5-3.2 7.8-7 8.8-3.8-1-7-3.8-7-8.8V6Z" /></symbol>
+  <symbol id="ic-split" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 12h6" /><path d="M9 12l4-6h8M9 12l4 6h8M13 12h8" /></symbol>
+  <symbol id="ic-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 2.5 8 12 13l9.5-5Z" /><path d="M2.5 12.5 12 17.5l9.5-5" /><path d="M2.5 16.5 12 21.5l9.5-5" /></symbol>
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 2 4 14h7l-1 8 9-12h-7Z" /></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></symbol>
+  <symbol id="ic-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 21V4" /><path d="M5 4h11l-2 4 2 4H5" /></symbol>
+</svg>
+
+<div class="stage">
+  <div class="deck" id="deck">
+    <!-- Slides live in sections/*.html, fetched by the loader at the bottom of this file. -->
+  </div>
+</div>
+
+<div class="progress"><i></i></div>
+<div class="pager"></div>
+
+<script>
+// Sections are fetched, so the deck needs HTTP (GitHub Pages or a local server), not file://.
+// Order here is slide order. Each section's inline <script> runs after all slides are in the
+// DOM and before deck.js counts data-step reveals.
+(async () => {
+  const SECTIONS = [
+    '00-cover',
+    '00-outline',
+    '01-what-is-nosql',
+    '02-why-nosql',
+    '03-four-types',
+    '04-distributed-basics',
+    '05-takeaways'
+  ];
+  // Cache-bust the stylesheet too: a cached deck.css leaves new slides unstyled.
+  document.querySelector('link[href="css/deck.css"]').href = `css/deck.css?v=${Date.now()}`;
+  const deck = document.getElementById('deck');
+  const htmls = await Promise.all(SECTIONS.map((n) =>
+    fetch(`sections/${n}.html`, { cache: 'no-cache' }).then((r) => {
+      if (!r.ok) throw new Error(`sections/${n}.html: HTTP ${r.status}`);
+      return r.text();
+    })));
+  const scripts = [];
+  htmls.forEach((html) => {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    tpl.content.querySelectorAll('script').forEach((s) => { scripts.push(s.textContent); s.remove(); });
+    deck.appendChild(tpl.content);
+  });
+  scripts.forEach((code) => {
+    const s = document.createElement('script');
+    s.textContent = code;
+    document.body.appendChild(s);
+  });
+  const engine = document.createElement('script');
+  // Cache-bust: without this, browsers keep running a stale deck.js after edits.
+  engine.src = `js/deck.js?v=${Date.now()}`;
+  document.body.appendChild(engine);
+})().catch((err) => {
+  const hint = location.protocol === 'file:'
+    ? 'Trang đang mở dạng file. Hãy chạy qua HTTP: <code>cd vntech-nosql &amp;&amp; python3 -m http.server</code>, rồi mở <code>http://localhost:8000</code>.'
+    : 'Kiểm tra file có tồn tại và tên khớp với danh sách SECTIONS trong index.html.';
+  document.getElementById('deck').innerHTML =
+    `<p style="padding:2rem;color:var(--ink, #eee)">Không tải được slide: ${err.message}.<br>${hint}</p>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!-- ============ SECTION 5 — TAKEAWAYS ============ -->
+<section class="slide divider" data-section="divider-05">
+  <div class="divider-num">05</div>
+  <div class="section-tag"><i></i>PHẦN 5</div>
+  <h2>Tổng kết</h2>
+  <p class="lead">Một cây quyết định để chọn database và năm điều nên nhớ.</p>
+  <div class="foot"><span class="num"></span><span>05 · tổng kết</span></div>
+  <aside class="notes">
+    <p>Phần cuối: tổng kết. Mình sẽ gói mọi thứ thành một cây quyết định và chốt năm điều nên nhớ.</p>
+  </aside>
+</section>
+
+<section class="slide dia" data-section="decision">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-split"/></svg>Chọn database</div>
+  <h2>Đi từ trái sang phải, dừng ở câu trả lời <b>"có"</b> đầu tiên</h2>
+  <div class="body" style="min-height:0;">
+    <div class="diagram-embed fit" style="aspect-ratio: 2.7; flex: none; width: 100%; margin-block: auto;">
+      <iframe src="diagrams/choose-database.html?embed=1" loading="lazy" title="Cây quyết định chọn database"></iframe>
+    </div>
+    <div class="diagram-caption">
+      <span>Đây là heuristic, không phải luật cứng. Hệ thống lớn thường kết hợp nhiều loại.</span>
+      <a href="diagrams/choose-database.html" target="_blank" rel="noopener">Mở toàn màn hình ↗</a>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>cây quyết định</span></div>
+  <aside class="notes">
+    <p>Đây là một cây quyết định đơn giản. Câu hỏi đầu tiên: có cần <b>ACID trên nhiều bảng</b> không — tiền, tồn kho? Có thì dùng SQL. Không thì hỏi tiếp: <b>quan hệ có phải trọng tâm</b> không? Có thì graph. Tiếp: có phải <b>chỉ tra theo key</b>? Có thì key-value. Tiếp: <b>ghi cực lớn</b>, time-series, log? Có thì wide-column. Nếu tất cả đều không, document là lựa chọn mặc định linh hoạt.</p>
+    <p>Nhớ là đây chỉ là heuristic. Phần 2 mình sẽ thấy các hệ thống thật kết hợp nhiều loại thế nào.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="takeaways">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-flag"/></svg>Năm điều nên nhớ</div>
+  <h2>Nếu chỉ mang về năm câu từ Phần 1</h2>
+  <ul class="points">
+    <li><span class="chip hot">1</span> NoSQL = <b>Not only SQL</b>: một họ database không dùng bảng quan hệ làm mô hình chính.</li>
+    <li data-step="1"><span class="chip hot">2</span> Nó ra đời vì cần <b>scale ngang</b> và <b>schema linh hoạt</b> — không phải vì SQL kém.</li>
+    <li data-step="2"><span class="chip hot">3</span> Bốn loại: <b>key-value</b> (tra theo key), <b>document</b> (JSON linh hoạt), <b>wide-column</b> (ghi cực lớn), <b>graph</b> (quan hệ sâu).</li>
+    <li data-step="3"><span class="chip hot">4</span> Phân tán là đánh đổi: <b>CAP</b>, <b>BASE</b>, và quorum <code>R + W &gt; N</code>.</li>
+    <li data-step="4"><span class="chip hot">5</span> Thiết kế từ <b>câu hỏi</b>, không từ dữ liệu. Hệ thống thật thường <b>kết hợp nhiều loại</b>.</li>
+  </ul>
+  <div class="foot"><span class="num"></span><span>takeaways</span></div>
+  <aside class="notes">
+    <p>Năm điều nên nhớ. <b>Một</b>, NoSQL là "Not only SQL" — một họ database, không phải một sản phẩm.</p>
+    <p><i>[→]</i> <b>Hai</b>, nó ra đời vì cần scale ngang và schema linh hoạt — không phải vì SQL kém. <i>[→]</i> <b>Ba</b>, bốn loại: key-value để tra theo key, document cho JSON linh hoạt, wide-column cho ghi cực lớn, graph cho quan hệ sâu.</p>
+    <p><i>[→]</i> <b>Bốn</b>, phân tán luôn là đánh đổi: CAP, BASE, và công thức quorum R cộng W lớn hơn N. <i>[→]</i> <b>Năm</b>, thiết kế bắt đầu từ câu hỏi, và hệ thống thật thường kết hợp nhiều loại.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>

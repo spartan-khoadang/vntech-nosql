@@ -1,0 +1,245 @@
+<!-- ============ SECTION 3 — FOUR TYPES ============ -->
+<section class="slide divider" data-section="divider-03">
+  <div class="divider-num">03</div>
+  <div class="section-tag"><i></i>PHẦN 3</div>
+  <h2>Bốn loại NoSQL</h2>
+  <p class="lead">Key-value, document, wide-column, graph: bốn hình dạng dữ liệu, mỗi hình dạng trả lời nhanh một kiểu câu hỏi.</p>
+  <div class="foot"><span class="num"></span><span>03 · bốn loại nosql</span></div>
+  <aside class="notes">
+    <p>Phần ba: bốn loại NoSQL. Với mỗi loại mình sẽ trả lời ba câu: <b>nó lưu dữ liệu thế nào</b>, <b>nó trả lời nhanh câu hỏi gì</b>, và <b>nó yếu ở đâu</b>.</p>
+  </aside>
+</section>
+
+<section class="slide" data-section="types-overview">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-layers"/></svg>Tổng quan</div>
+  <h2>Đi từ đơn giản nhất (key-value) tới giàu quan hệ nhất (graph)</h2>
+  <div class="quad center">
+    <div class="card lift"><svg class="ic"><use href="#ic-key"/></svg><div class="k">Key-Value</div><div class="t">Một hash map khổng lồ</div><p>Lấy và ghi theo key, cực nhanh.</p><div class="ex">Redis · DynamoDB · Memcached</div></div>
+    <div class="card lift" data-step="1"><svg class="ic"><use href="#ic-doc"/></svg><div class="k">Document</div><div class="t">Mỗi bản ghi là một JSON</div><p>Truy vấn theo trường bên trong document.</p><div class="ex">MongoDB · Couchbase · Firestore</div></div>
+    <div class="card lift" data-step="2"><svg class="ic"><use href="#ic-cols"/></svg><div class="k">Wide-column</div><div class="t">Hàng có cột động</div><p>Ghi khối lượng cực lớn theo partition.</p><div class="ex">Cassandra · HBase · ScyllaDB</div></div>
+    <div class="card lift" data-step="3"><svg class="ic"><use href="#ic-graph"/></svg><div class="k">Graph</div><div class="t">Node và cạnh</div><p>Duyệt quan hệ nhiều bước.</p><div class="ex">Neo4j · Neptune · ArangoDB</div></div>
+  </div>
+  <div class="foot"><span class="num"></span><span>4 loại · tổng quan</span></div>
+  <aside class="notes">
+    <p>Đây là bức tranh tổng thể, đi từ đơn giản nhất đến giàu quan hệ nhất.</p>
+    <p><b>Key-value</b>: như một hash map khổng lồ — Redis, DynamoDB. <i>[→]</i> <b>Document</b>: mỗi bản ghi là một JSON — MongoDB, Firestore. <i>[→]</i> <b>Wide-column</b>: hàng có số cột thay đổi, chuyên ghi khối lượng lớn — Cassandra, HBase. <i>[→]</i> <b>Graph</b>: dữ liệu là node và cạnh, chuyên duyệt quan hệ — Neo4j.</p>
+    <p>Giờ mình đi vào từng loại.</p>
+    <p><i>(~1 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="key-value">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-key"/></svg>3.1 · Key-Value</div>
+  <h2>Đưa key, nhận value. Database <b>không cần biết</b> bên trong value là gì.</h2>
+  <div class="split code-left">
+    <div class="stack">
+<pre class="code"><span class="c"># key                     → value</span>
+session:8f3a             → {"userId":42,"exp":"18:00"}
+cart:user:42             → [{"sku":"A1","qty":2}]
+rate_limit:ip:1.2.3.4    → 17
+
+<span class="c"># Redis</span>
+SET session:8f3a '{"userId":42}' <span class="hl">EX 3600</span>  <span class="c"># tự hết hạn</span>
+GET session:8f3a
+INCR rate_limit:ip:1.2.3.4              <span class="c"># tăng nguyên tử</span></pre>
+    </div>
+    <ul class="points tight">
+      <li><span class="chip ok">mạnh</span> Đọc/ghi theo key <b>O(1)</b>; nhiều hệ chạy in-memory → dưới 1 ms.</li>
+      <li><span class="chip ok">mạnh</span> Dễ phân tán nhất: <code>hash(key)</code> là biết node nào giữ dữ liệu.</li>
+      <li data-step="1"><span class="chip ok">mạnh</span> Có <b>TTL</b>: dữ liệu tự hết hạn, hợp với cache và session.</li>
+      <li data-step="2"><span class="chip risk">yếu</span> Không hỏi được theo nội dung: "tìm mọi session của user 42" là không làm được nếu không tự tạo thêm key.</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>key-value</span></div>
+  <aside class="notes">
+    <p>Loại đầu tiên và đơn giản nhất: <b>key-value</b>. Hình dung một cái hash map khổng lồ, phân tán trên nhiều máy. Mình đưa vào một key, nhận lại một value. Database không quan tâm value là chuỗi, JSON hay ảnh — với nó, value là một "hộp đen".</p>
+    <p>Ví dụ với Redis: <code>SET</code> một session kèm <code>EX 3600</code> nghĩa là một tiếng sau nó tự biến mất. <code>INCR</code> tăng một bộ đếm một cách nguyên tử — dùng cho rate limiting.</p>
+    <p>Điểm mạnh: đọc ghi theo key là O(1), nhiều hệ chạy trong RAM nên dưới một mili-giây. Phân tán rất dễ vì chỉ cần hash key là biết node. <i>[→]</i> Có TTL cho dữ liệu tạm.</p>
+    <p><i>[→]</i> Điểm yếu: <b>không hỏi được theo nội dung</b>. Muốn "tìm mọi session của user 42" thì phải tự tạo thêm key làm index.</p>
+    <p><i>(~2 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="document">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-doc"/></svg>3.2 · Document</div>
+  <h2>Giống key-value, nhưng database <b>hiểu cấu trúc bên trong</b> value nên query và index được theo từng trường</h2>
+  <div class="split even">
+    <div class="stack">
+<pre class="code sm">{
+  "_id": "p1001",
+  "name": "Laptop X14",
+  "price": 25990000,
+  "category": "laptop",
+  <span class="hl">"specs": { "cpu": "i7", "ram_gb": 16 }</span>,
+  "tags": ["ultrabook", "văn phòng"],
+  "reviews": [ { "user": "an", "stars": 5 } ]
+}</pre>
+<pre class="code sm" data-step="1"><span class="c">// laptop RAM ≥ 16GB, giá &lt; 30 triệu</span>
+db.products.find({
+  category: "laptop",
+  <span class="hl">"specs.ram_gb": { $gte: 16 }</span>,
+  price: { $lt: 30000000 }
+}).sort({ price: 1 })</pre>
+    </div>
+    <ul class="points tight">
+      <li><span class="chip ok">mạnh</span> Schema linh hoạt, khớp tự nhiên với object trong code.</li>
+      <li><span class="chip ok">mạnh</span> Dữ liệu liên quan được <b>lồng</b> (embed) vào nhau → đọc một lần là đủ.</li>
+      <li data-step="1"><span class="chip ok">mạnh</span> Có index phụ, aggregation, query theo trường lồng nhau.</li>
+      <li data-step="2"><span class="chip risk">yếu</span> Quan hệ nhiều–nhiều phức tạp khó mô hình; dữ liệu nhân bản phải tự đồng bộ; document không được phình vô hạn (MongoDB giới hạn 16 MB).</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>document</span></div>
+  <aside class="notes">
+    <p>Loại thứ hai: <b>document</b>. Về bản chất nó giống key-value — mỗi document có một <code>_id</code> — nhưng khác ở chỗ database <b>hiểu cấu trúc</b> bên trong. Document được nhóm vào <b>collection</b>, giống bảng nhưng không có schema cố định.</p>
+    <p>Đây là một laptop: có <code>specs</code> lồng bên trong, có mảng <code>tags</code>, có cả <code>reviews</code>. <i>[→]</i> Và mình query được thẳng vào trường lồng nhau: laptop có RAM từ 16GB, giá dưới 30 triệu, sắp xếp theo giá. Cũng đánh index được trên các trường đó.</p>
+    <p>Điểm mạnh: linh hoạt, thân thiện với lập trình viên, đọc một lần là có đủ dữ liệu.</p>
+    <p><i>[→]</i> Điểm yếu: quan hệ nhiều–nhiều khó mô hình; khi nhân bản dữ liệu thì phải tự đồng bộ; và một document không được phình vô hạn — MongoDB giới hạn 16 MB.</p>
+    <p><i>(~2 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="wide-column">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-cols"/></svg>3.3 · Wide-column</div>
+  <h2>Dữ liệu chia theo <b>partition key</b>, trong mỗi partition được <b>sắp sẵn</b> theo clustering key</h2>
+  <div class="split">
+    <div class="stack">
+<pre class="code sm">CREATE TABLE view_history (
+  user_id bigint, viewed_at timestamp,
+  product_id text, device text,
+  PRIMARY KEY (<span class="hl">(user_id)</span>, <span class="hl">viewed_at</span>)
+) WITH CLUSTERING ORDER BY (viewed_at DESC);
+
+SELECT product_id FROM view_history
+WHERE user_id = 42 LIMIT 20;   <span class="c">-- đọc đúng 1 partition</span></pre>
+      <div class="chart meter" data-step="1">
+        <svg viewBox="0 0 640 120" role="img" aria-label="Partition user 42 với các hàng sắp theo thời gian">
+          <rect x="0" y="8" width="130" height="104" rx="10" class="sv-box-hot"/>
+          <text x="65" y="52" text-anchor="middle" class="sv-hot">partition</text>
+          <text x="65" y="72" text-anchor="middle" class="sv-lbl">user_id = 42</text>
+          <rect x="146" y="8" width="494" height="30" rx="6" class="sv-box"/>
+          <text x="160" y="28" class="sv-lbl-sm">10:05 → p1001 · ios</text>
+          <rect x="146" y="45" width="494" height="30" rx="6" class="sv-box"/>
+          <text x="160" y="65" class="sv-lbl-sm">09:58 → p2040 · ios</text>
+          <rect x="146" y="82" width="494" height="30" rx="6" class="sv-box"/>
+          <text x="160" y="102" class="sv-lbl-sm">hôm qua 21:12 → p0007 · web   (mới nhất ở trên)</text>
+        </svg>
+      </div>
+    </div>
+    <ul class="points tight">
+      <li><span class="chip ok">mạnh</span> <b>Ghi cực nhanh</b>: ghi vào RAM + log, sau đó mới dồn xuống đĩa (LSM-tree).</li>
+      <li><span class="chip ok">mạnh</span> Scale tuyến tính tới hàng trăm node; Cassandra không có master.</li>
+      <li data-step="1"><span class="chip ok">mạnh</span> Chọn mức nhất quán theo từng query: <code>ONE</code>, <code>QUORUM</code>, <code>ALL</code>.</li>
+      <li data-step="2"><span class="chip risk">yếu</span> Query <b>bắt buộc</b> đi theo partition key; không JOIN; thiết kế mỗi query một bảng.</li>
+      <li data-step="2"><span class="chip risk">đừng nhầm</span> Khác <b>columnar DB</b> (ClickHouse, BigQuery) dùng cho phân tích.</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>wide-column</span></div>
+  <aside class="notes">
+    <p>Loại thứ ba: <b>wide-column</b>, tiêu biểu là Cassandra. Cách nghĩ: dữ liệu được chia theo <b>partition key</b> — ở đây là <code>user_id</code>. Bên trong mỗi partition, các hàng được <b>sắp xếp sẵn</b> theo <b>clustering key</b> — ở đây là thời gian xem, mới nhất ở trên.</p>
+    <p><i>[→]</i> Nên câu "20 sản phẩm user 42 xem gần nhất" chỉ cần đọc đúng một partition, dữ liệu đã nằm theo thứ tự — rất nhanh.</p>
+    <p>Điểm mạnh lớn nhất là <b>ghi cực nhanh</b>: nó ghi vào RAM và commit log trước, sau đó mới dồn xuống đĩa thành các file bất biến — cấu trúc này gọi là LSM-tree. Cassandra không có master, mọi node ngang hàng, scale gần như tuyến tính. Và mình chọn được mức nhất quán cho từng query: <code>ONE</code> là chỉ cần một máy trả lời, <code>QUORUM</code> là đa số, <code>ALL</code> là tất cả — càng nhiều máy thì càng chắc có dữ liệu mới nhất, nhưng càng chậm.</p>
+    <p><i>[→]</i> Điểm yếu: query <b>bắt buộc</b> phải theo partition key, không JOIN, nên thường mỗi query thiết kế một bảng riêng. Và lưu ý đừng nhầm với <b>columnar database</b> như ClickHouse — loại đó lưu theo cột để phân tích, là một chuyện khác.</p>
+    <p><i>(~2,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="graph">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-graph"/></svg>3.4 · Graph</div>
+  <h2>Quan hệ được <b>lưu thẳng</b> thành cạnh, không phải tính lại bằng JOIN mỗi lần đọc</h2>
+  <div class="split even">
+    <div class="stack">
+      <div class="chart meter">
+        <svg viewBox="0 0 560 200" role="img" aria-label="Đồ thị: An là bạn của Bình và Chi, họ mua sản phẩm">
+          <path d="M90 60 L260 40" class="sv-acc"/><path d="M90 60 L260 150" class="sv-acc"/>
+          <path d="M260 40 L460 60" class="sv-line"/><path d="M260 150 L460 60" class="sv-line"/><path d="M260 150 L460 160" class="sv-line"/>
+          <text x="170" y="38" text-anchor="middle" class="sv-hot">FRIEND</text>
+          <text x="165" y="125" text-anchor="middle" class="sv-hot">FRIEND</text>
+          <text x="370" y="38" text-anchor="middle" class="sv-lbl-sm">BOUGHT</text>
+          <text x="370" y="175" text-anchor="middle" class="sv-lbl-sm">BOUGHT</text>
+          <circle cx="90" cy="60" r="30" class="sv-box-hot"/><text x="90" y="65" text-anchor="middle" class="sv-lbl">An</text>
+          <circle cx="260" cy="40" r="28" class="sv-box"/><text x="260" y="45" text-anchor="middle" class="sv-lbl">Bình</text>
+          <circle cx="260" cy="150" r="28" class="sv-box"/><text x="260" y="155" text-anchor="middle" class="sv-lbl">Chi</text>
+          <rect x="420" y="40" width="110" height="40" rx="10" class="sv-box-ok"/><text x="475" y="65" text-anchor="middle" class="sv-lbl">Laptop X14</text>
+          <rect x="420" y="140" width="110" height="40" rx="10" class="sv-box"/><text x="475" y="165" text-anchor="middle" class="sv-lbl">Tai nghe</text>
+        </svg>
+      </div>
+<pre class="code sm" data-step="1"><span class="c">// gợi ý: bạn bè của An đã mua gì?</span>
+MATCH (me:User {name:"An"})<span class="hl">-[:FRIEND]-></span>(f)<span class="hl">-[:BOUGHT]-></span>(p)
+WHERE NOT (me)-[:BOUGHT]->(p)
+RETURN p.name, count(f) AS soBan ORDER BY soBan DESC</pre>
+    </div>
+    <ul class="points tight">
+      <li><span class="chip ok">mạnh</span> Mỗi node trỏ thẳng tới hàng xóm → duyệt quan hệ nhanh, <b>không phụ thuộc</b> tổng kích thước dữ liệu.</li>
+      <li data-step="1"><span class="chip ok">mạnh</span> Query theo mẫu đường đi: bạn của bạn, đường ngắn nhất, chuỗi giao dịch.</li>
+      <li data-step="2">Trong SQL, mỗi bước "bạn của bạn" là thêm một JOIN; tới 4–5 bước thì chi phí tăng bùng nổ.</li>
+      <li data-step="3"><span class="chip risk">yếu</span> Khó chia ra nhiều máy; không hợp với thống kê trên toàn bộ dữ liệu.</li>
+    </ul>
+  </div>
+  <div class="foot"><span class="num"></span><span>graph</span></div>
+  <aside class="notes">
+    <p>Loại cuối: <b>graph</b>. Dữ liệu là <b>node</b> — An, Bình, Chi, sản phẩm — và <b>cạnh</b> có tên — FRIEND, BOUGHT. Điểm khác biệt: quan hệ được <b>lưu thẳng</b>, mỗi node trỏ trực tiếp tới hàng xóm, nên duyệt không phụ thuộc tổng kích thước dữ liệu.</p>
+    <p><i>[→]</i> Query bằng Cypher của Neo4j đọc gần như vẽ hình: từ An, đi theo cạnh FRIEND tới bạn bè, rồi theo cạnh BOUGHT tới sản phẩm, loại những thứ An đã mua. Kết quả: Laptop X14 được cả Bình và Chi mua → gợi ý cho An.</p>
+    <p><i>[→]</i> Trong SQL, mỗi bước "bạn của bạn" là thêm một self-JOIN; đến 4–5 bước thì rất chậm.</p>
+    <p><i>[→]</i> Điểm yếu: đồ thị khó cắt ra nhiều máy, và không hợp với thống kê kiểu "tổng doanh thu theo tháng".</p>
+    <p><i>(~2 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="types-compare">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-list"/></svg>So sánh 4 loại</div>
+  <h2>Không có loại nào thắng ở mọi cột</h2>
+  <table class="tbl dense">
+    <thead><tr><th></th><th>Key-Value</th><th>Document</th><th>Wide-column</th><th>Graph</th></tr></thead>
+    <tbody>
+      <tr><td class="name">Đơn vị dữ liệu</td><td>key → value</td><td>document JSON</td><td>partition + hàng có cột động</td><td>node + cạnh</td></tr>
+      <tr><td class="name">Query nhanh nhất</td><td>lấy theo key</td><td>lọc theo trường</td><td>đọc 1 partition theo thứ tự</td><td>duyệt quan hệ nhiều bước</td></tr>
+      <tr><td class="name">Query theo nội dung</td><td class="no">không</td><td class="yes">mạnh</td><td>theo key đã thiết kế</td><td class="yes">theo quan hệ</td></tr>
+      <tr><td class="name">Quan hệ</td><td class="no">không</td><td>embed / reference</td><td class="no">nhân bản sẵn</td><td class="yes">trọng tâm</td></tr>
+      <tr><td class="name">Scale ngang</td><td class="yes">rất dễ</td><td class="yes">tốt</td><td class="yes">rất tốt</td><td class="no">hạn chế</td></tr>
+      <tr><td class="name">Hình ảnh dễ nhớ</td><td>tủ đồ có số</td><td>tập hồ sơ</td><td>sổ nhật ký theo người</td><td>sơ đồ mạng quan hệ</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span class="num"></span><span>so sánh 4 loại</span></div>
+  <aside class="notes">
+    <p>Gom lại thành một bảng. Không có loại nào thắng ở mọi cột: key-value scale dễ nhất nhưng không query được theo nội dung; graph mạnh nhất về quan hệ nhưng khó scale.</p>
+    <p>Dòng cuối là hình ảnh để dễ nhớ: key-value là <b>tủ đồ có số</b> — biết số tủ thì lấy ngay. Document là <b>tập hồ sơ</b> — mỗi hồ sơ một kiểu, lục được theo nội dung. Wide-column là <b>sổ nhật ký theo từng người</b> — ghi liên tục, đọc theo thứ tự thời gian. Graph là <b>sơ đồ mạng quan hệ</b>.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide dia" data-section="polyglot">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-server"/></svg>Bốn loại trong một hệ thống</div>
+  <h2>Hệ thống thật thường <b>kết hợp nhiều loại</b>, mỗi loại cho đúng phần dữ liệu của nó</h2>
+  <div class="body" style="min-height:0;">
+    <div class="diagram-embed fit" style="aspect-ratio: 1.345;">
+      <iframe src="diagrams/nosql-four-types-polyglot.html?embed=1" loading="lazy" title="Bốn loại NoSQL trong một hệ e-commerce"></iframe>
+    </div>
+    <div class="diagram-caption">
+      <span>Polyglot persistence: Redis cho session, MongoDB cho catalog, Neo4j cho gợi ý, Cassandra cho lịch sử. Chi tiết use case ở Phần 2.</span>
+      <a href="diagrams/nosql-four-types-polyglot.html" target="_blank" rel="noopener">Mở toàn màn hình ↗</a>
+    </div>
+  </div>
+  <div class="foot"><span class="num"></span><span>polyglot persistence</span></div>
+  <aside class="notes">
+    <p>Trong thực tế, một hệ thống không chỉ dùng một loại. Đây là một shop online: <b>Redis</b> giữ session và giỏ hàng, <b>MongoDB</b> giữ catalog sản phẩm, <b>Neo4j</b> tính gợi ý, <b>Cassandra</b> ghi lịch sử xem và log. Phần thanh toán thường vẫn để ở SQL vì cần ACID.</p>
+    <p>Cách làm này gọi là <b>polyglot persistence</b>. Cái giá là phải vận hành nhiều hệ và đồng bộ dữ liệu giữa chúng. Đây cũng chính là phần mình sẽ đào sâu ở <b>Phần 2: use case</b>.</p>
+    <p><i>(~1,5 phút)</i></p>
+  </aside>
+</section>
+
+<section class="slide" data-section="beyond-four">
+  <div class="eyebrow"><svg class="ic"><use href="#ic-search"/></svg>Ngoài bốn loại chính</div>
+  <h2>Vài nhánh chuyên biệt bạn sẽ gặp thường xuyên</h2>
+  <div class="quad center">
+    <div class="card"><svg class="ic"><use href="#ic-clock"/></svg><div class="k">Time-series</div><div class="t">Dữ liệu theo thời gian</div><p>Metrics, cảm biến, giá chứng khoán.</p><div class="ex">InfluxDB · TimescaleDB</div></div>
+    <div class="card"><svg class="ic"><use href="#ic-search"/></svg><div class="k">Search engine</div><div class="t">Tìm kiếm full-text</div><p>Inverted index, chấm điểm độ liên quan.</p><div class="ex">Elasticsearch · OpenSearch</div></div>
+    <div class="card"><svg class="ic"><use href="#ic-bolt"/></svg><div class="k">Vector</div><div class="t">Tìm theo ý nghĩa</div><p>Embedding cho AI, semantic search, RAG.</p><div class="ex">Milvus · Pinecone · pgvector</div></div>
+    <div class="card"><svg class="ic"><use href="#ic-layers"/></svg><div class="k">Multi-model</div><div class="t">Nhiều mô hình một hệ</div><p>Document + graph + key-value cùng lúc.</p><div class="ex">ArangoDB · Cosmos DB</div></div>
+  </div>
+  <div class="foot"><span class="num"></span><span>các nhánh chuyên biệt</span></div>
+  <aside class="notes">
+    <p>Ngoài bốn loại chính, có vài nhánh chuyên biệt mọi người sẽ hay gặp: <b>time-series</b> cho metrics và dữ liệu cảm biến; <b>search engine</b> như Elasticsearch cho tìm kiếm full-text; <b>vector database</b> — đang rất hot nhờ AI — để tìm theo ý nghĩa bằng embedding; và <b>multi-model</b> hỗ trợ nhiều mô hình trong một hệ.</p>
+    <p>Hôm nay mình chỉ điểm danh; trọng tâm vẫn là bốn loại chính.</p>
+    <p><i>(~1 phút)</i></p>
+  </aside>
+</section>
